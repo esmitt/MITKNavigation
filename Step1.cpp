@@ -26,6 +26,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 
 #include <mitkCameraController.h>
 
+//vtk
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyData.h>
@@ -35,6 +36,14 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkCamera.h>
+
+#include <string>
+
+//matlab
+#include "matlab/mat.h"
+#pragma comment(lib, "libmex.lib")
+#pragma comment(lib, "libmx.lib")
+#pragma comment(lib, "libmat.lib")
 
 // ** NOT USED **
 //if was invoked alone, as a function using the SetCallback 
@@ -82,11 +91,65 @@ public:
 	}
 };
 
+///Class to handle a Matlab (.mat) files from C++
+class CMatLoader 
+{
+private:
+	MATFile* m_pFileMat;	//
+public:
+	CMatLoader()
+	{
+		m_pFileMat = nullptr;
+	}
+	~CMatLoader()
+	{	}
+	
+	/// Function to load the file
+	/// @param strFilename Name of the file to open
+	/// @return true is file was open correctly, false otherwise
+	bool OpenFile(std::string strFilename) 
+	{
+		m_pFileMat = matOpen(strFilename.c_str(), "r");
+		if (m_pFileMat == nullptr)	//for any reason, can not open it
+			return false;
+
+		//read the main structure
+		mxArray *pArr = matGetVariable(m_pFileMat, "G");
+
+		if ((pArr != nullptr) && !mxIsEmpty(pArr) && mxIsStruct(pArr))
+		{
+			mwSize num = mxGetNumberOfFields(pArr);	//number of fields
+			
+			//reading the 1st field (in this case G.e)
+			std::vector<double> v;
+			//get the field
+			mxArray *pArrToE = mxGetField(pArr, 0, "e");
+			mwSize iDimE = mxGetNumberOfElements(pArrToE);
+			double *pr = mxGetPr(pArrToE);
+			//copy into a STL structure
+			if (pr != nullptr)
+			{
+				v.resize(iDimE);
+				v.assign(pr, pr + iDimE);
+			}
+			//for now, just printing
+			for (size_t i = 0; i<v.size(); ++i)
+				std::cout << v[i] << std::endl;
+		}
+
+		//cleanup
+		mxDestroyArray(pArr);
+		matClose(m_pFileMat);
+		return true;
+	}
+};
+
 //##Documentation
 //## @brief Load image (nrrd format) and display it in a 2D view
 int main(int argc, char *argv[])
 {
 	QApplication qtapplication(argc, argv);
+	CMatLoader matlabObj;
 
 	// Register Qmitk-dependent global instances
 	QmitkRegisterClasses();
@@ -99,6 +162,8 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	if (!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
+		return 1;
 
 	// Create a RenderWindow
 	QmitkRenderWindow renderWindow;
