@@ -19,12 +19,17 @@ class vtkTimerUser : public vtkCommand
 	//attributes
 private:
 	int m_iTimerCount;
+	vtkSmartPointer<vtkPoints> m_pPoints;
+	int m_iIndex;
 public:
 	vtkSmartPointer<vtkCamera> m_vtkCamera;
 
 public:
 	// Important!
 	static vtkTimerUser *New();
+
+	// Function to set the number of Points
+	void setPath(const vtkSmartPointer<vtkPoints> & pPoints);
 
 	// Function that execute the main code of the Command
 	virtual void Execute(vtkObject *caller, unsigned long eventId, void * vtkNotUsed(callData));

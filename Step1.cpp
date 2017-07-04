@@ -29,6 +29,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include "vtkTimerUser.h"
 
 #include <vtkConeSource.h>
+#include <vtkVertexGlyphFilter.h>
 
 // ** NOT USED **
 //if was invoked alone, as a function using the SetCallback 
@@ -39,44 +40,6 @@ See LICENSE.txt or http://www.mitk.org for details.
 //	//do to something here
 //	iren->Render();
 //}
-
-///// Class to handle an implementation of an Observer under a Command event
-//
-//class vtkTimerUser : public vtkCommand
-//{
-//	//attributes
-//private:
-//	int m_iTimerCount;
-//public:
-//	vtkSmartPointer<vtkCamera> m_vtkCamera;
-//	
-//public:
-//	// Important!
-//	static vtkTimerUser *New()
-//	{
-//		vtkTimerUser *pCallBack = new vtkTimerUser;
-//		pCallBack->m_iTimerCount = 0;
-//		return pCallBack;
-//	}
-//
-//	// Function that execute the main code of the Command
-//	virtual void Execute(vtkObject *caller, unsigned long eventId, void * vtkNotUsed(callData))
-//	{
-//		if (vtkCommand::TimerEvent == eventId)
-//		{
-//			++this->m_iTimerCount;
-//		}
-//		
-//		// Get the current position
-//		double* values = m_vtkCamera->GetPosition();
-//		m_vtkCamera->SetPosition(values[0], values[1], values[2] + this->m_iTimerCount);
-//		
-//		// Safe normally to continue
-//		vtkRenderWindowInteractor *iren = vtkRenderWindowInteractor::SafeDownCast(caller);
-//		iren->GetRenderWindow()->Render();
-//	}
-//};
-
 
 //##Documentation
 //## @brief Load image (nrrd format) and display it in a 2D view
@@ -95,7 +58,7 @@ int main(int argc, char *argv[])
 	mitk::StandaloneDataStorage::Pointer ds = mitk::StandaloneDataStorage::New();
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
-	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
 	if (!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
 		return 1;
 
@@ -131,15 +94,6 @@ int main(int argc, char *argv[])
 	// Add a data node
 	ds->Add(coneResult);
 	
-	// Add the node to DataStorage
-	rendered->SetDataStorage(ds);
-	
-	// Change the color of Background
-	rendered->GetVtkRenderer()->SetBackground(0.15, 0.15, 0.15);
-
-	// Use it as a 3D view!
-	renderWindow.GetRenderer()->SetMapperID(mitk::BaseRenderer::Standard3D);
-
 	//// Get the existing camera and set a new position and orientation
 	//// this preserve the current functionalities of the current camera
 	vtkSmartPointer<vtkCamera> tCamera = renderWindow.GetRenderer()->GetVtkRenderer()->GetActiveCamera();
@@ -149,12 +103,55 @@ int main(int argc, char *argv[])
 	//// Get the existing interactor from the GetInteractor() directly instead use GetVtkRenderWindowInteractor
 	vtkSmartPointer<QVTKInteractor> qInteractor = renderWindow.GetInteractor();
 	qInteractor->SetRenderWindow(renderWindow.GetRenderWindow());
-	int timerId = qInteractor->CreateRepeatingTimer(100);
+	int timerId = qInteractor->CreateRepeatingTimer(1000);
+
+	//add points
+	vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
+	pointsPolydata->SetPoints(matlabObj.m_vPointsSkel);
+	cout << "number of points: " << pointsPolydata->GetNumberOfPoints() << endl;
+	
+	vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
+	vertexFilter->SetInputData(pointsPolydata);
+	vertexFilter->Update();
+
+	vtkSmartPointer<vtkPolyData> polydata =	vtkSmartPointer<vtkPolyData>::New();
+	polydata->ShallowCopy(vertexFilter->GetOutput());
+
+	// Create the MITK surface object
+	mitk::Surface::Pointer points_surface = mitk::Surface::New();
+	points_surface->SetVtkPolyData(polydata);
+
+	// Create a new node in DataNode with properties
+	mitk::DataNode::Pointer pointResult = mitk::DataNode::New();
+	pointResult->SetColor(0, 1, 0);
+	std::string nameOfOuputImage = "points-in-path";
+	pointResult->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
+	
+	// Set the surface into the Datanode
+	pointResult->SetData(points_surface);
+
+	// Add a data node
+	ds->Add(pointResult);
+	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
 	vtkSmartPointer<vtkTimerUser> tCBInstance = vtkSmartPointer<vtkTimerUser>::New();
 	tCBInstance->m_vtkCamera = tCamera;
+	//tCBInstance->setPath(polydata);
 	qInteractor->AddObserver(vtkCommand::TimerEvent, tCBInstance);
+
+
+	////////////////////////////////////////////////////////////////////////
+	////////////////////////////				final part
+	////////////////////////////////////////////////////////////////////////
+	// Change the color of Background
+	rendered->GetVtkRenderer()->SetBackground(0.15, 0.15, 0.15);
+
+	// Use it as a 3D view!
+	renderWindow.GetRenderer()->SetMapperID(mitk::BaseRenderer::Standard3D);
+
+	// Add the node to DataStorage
+	rendered->SetDataStorage(ds);
 
 	//update all instances
 	mitk::RenderingManager::GetInstance()->RequestUpdateAll();

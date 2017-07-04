@@ -1,6 +1,7 @@
 #include "matLoader.h"
 #include <vector>
 #include <iostream>
+#include "utility.h"
 
 CMatLoader::CMatLoader()
 {
@@ -19,18 +20,21 @@ bool CMatLoader::OpenFile(std::string strFilename)
 	if (m_pFileMat == nullptr)	//for any reason, can not open it
 		return false;
 
+	/////////////////////////////////////////////////
 	//read the main structure
+	/////////////////////////////////////////////////
 	mxArray *pArr = matGetVariable(m_pFileMat, "G");
 
 	if ((pArr != nullptr) && !mxIsEmpty(pArr) && mxIsStruct(pArr))
 	{
 		mwSize num = mxGetNumberOfFields(pArr);	//number of fields
 
-																						//reading the 1st field (in this case G.e)
+		/////////////////////////////////////////////////
+		//reading the 1st field (in this case G.e)
+		/////////////////////////////////////////////////
 		std::vector<double> v;
-		//get the field
-		mxArray *pArrToE = mxGetField(pArr, 0, "e");
-		mwSize iDimE = mxGetNumberOfElements(pArrToE);
+		mxArray *pArrToE = mxGetField(pArr, 0, "e");	//get the field 
+		mwSize iDimE = mxGetNumberOfElements(pArrToE);	
 		double *pr = mxGetPr(pArrToE);
 		//copy into a STL structure
 		if (pr != nullptr)
@@ -41,6 +45,33 @@ bool CMatLoader::OpenFile(std::string strFilename)
 		//for now, just printing
 		//for (size_t i = 0; i<v.size(); ++i)
 		//	std::cout << v[i] << std::endl;
+	}
+
+	/////////////////////////////////////////////////
+	//read the skel
+	/////////////////////////////////////////////////
+	mxArray *pArrToSkel = matGetVariable(m_pFileMat, "skel");
+	if ((pArrToSkel != nullptr) && !mxIsEmpty(pArrToSkel) && mxIsLogical(pArrToSkel))
+	{
+		mwSize iDimSkel = mxGetNumberOfElements(pArrToSkel);
+		bool *prLog = mxGetLogicals(pArrToSkel);
+
+		size_t nDim = mxGetNumberOfDimensions(pArrToSkel);	//number of dimensions 2D, 3D (i.e. 2, 3)
+		const size_t* dime = mxGetDimensions(pArrToSkel);		//get the array of size nDim with the sizes
+		
+		m_vPointsSkel =	vtkSmartPointer<vtkPoints>::New();
+		int* values = new int[nDim];
+		
+		//store only all true-logic points
+		for (size_t i = 0; i < iDimSkel; ++i)
+		{
+			if (prLog[i])	//the only who is true/remarkable
+			{
+				CUtility::getInstance()->ind2sub(dime, nDim, i, values);	//function from index to [x, y, z]
+				m_vPointsSkel->InsertNextPoint(values[1], values[0], values[2]);
+			}
+		}
+		delete values;
 	}
 
 	//cleanup
