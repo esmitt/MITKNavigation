@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 {
 	QApplication qtapplication(argc, argv);
 	CMatLoader matlabObj;
-	
+	Graph mainData;
 	// Register Qmitk-dependent global instances
 	QmitkRegisterClasses();
 
@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
-	if (!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
-		return 1;
+	if(!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat", mainData))
+		return EXIT_FAILURE;
 
 	// Create a RenderWindow
 	QmitkRenderWindow renderWindow;
@@ -105,33 +105,9 @@ int main(int argc, char *argv[])
 	qInteractor->SetRenderWindow(renderWindow.GetRenderWindow());
 	int timerId = qInteractor->CreateRepeatingTimer(1000);
 
-	//add points
-	vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
-	pointsPolydata->SetPoints(matlabObj.m_vPointsSkel);
-	cout << "number of points: " << pointsPolydata->GetNumberOfPoints() << endl;
-	
-	vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
-	vertexFilter->SetInputData(pointsPolydata);
-	vertexFilter->Update();
-
-	vtkSmartPointer<vtkPolyData> polydata =	vtkSmartPointer<vtkPolyData>::New();
-	polydata->ShallowCopy(vertexFilter->GetOutput());
-
-	// Create the MITK surface object
-	mitk::Surface::Pointer points_surface = mitk::Surface::New();
-	points_surface->SetVtkPolyData(polydata);
-
-	// Create a new node in DataNode with properties
-	mitk::DataNode::Pointer pointResult = mitk::DataNode::New();
-	pointResult->SetColor(0, 1, 0);
-	std::string nameOfOuputImage = "points-in-path";
-	pointResult->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
-	
-	// Set the surface into the Datanode
-	pointResult->SetData(points_surface);
-
 	// Add a data node
-	ds->Add(pointResult);
+	//ds->Add(pointResult);
+	ds->Add(mainData.getDrawableObject());
 	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor

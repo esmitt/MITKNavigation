@@ -3,6 +3,7 @@
 #include <iostream>
 #include "utility.h"
 
+
 CMatLoader::CMatLoader()
 {
 	m_pFileMat = nullptr;
@@ -14,7 +15,7 @@ CMatLoader::~CMatLoader()
 /// Function to load the file
 /// @param strFilename Name of the file to open
 /// @return true is file was open correctly, false otherwise
-bool CMatLoader::OpenFile(std::string strFilename)
+bool CMatLoader::OpenFile(std::string strFilename, Graph & theData)
 {
 	m_pFileMat = matOpen(strFilename.c_str(), "r");
 	if (m_pFileMat == nullptr)	//for any reason, can not open it
@@ -59,18 +60,22 @@ bool CMatLoader::OpenFile(std::string strFilename)
 		size_t nDim = mxGetNumberOfDimensions(pArrToSkel);	//number of dimensions 2D, 3D (i.e. 2, 3)
 		const size_t* dime = mxGetDimensions(pArrToSkel);		//get the array of size nDim with the sizes
 		
-		m_vPointsSkel =	vtkSmartPointer<vtkPoints>::New();
+		//m_vPointsSkel =	vtkSmartPointer<vtkPoints>::New();
+
 		int* values = new int[nDim];
-		
+		int iIndex = 0;
 		//store only all true-logic points
 		for (size_t i = 0; i < iDimSkel; ++i)
 		{
 			if (prLog[i])	//the only who is true/remarkable
 			{
 				CUtility::getInstance()->ind2sub(dime, nDim, i, values);	//function from index to [x, y, z]
-				m_vPointsSkel->InsertNextPoint(values[1], values[0], values[2]);
+				//m_vPointsSkel->InsertNextPoint(values[1], values[0], values[2]);
+				//store points as vertexes into the graph
+				theData.addGraphVertex(GraphVertex(iIndex++, values[1], values[0], values[2]));
 			}
 		}
+		theData.computeDistances();	//calculate distance between vertexes
 		delete values;
 	}
 
