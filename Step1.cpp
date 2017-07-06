@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
 	//tCBInstance->setPath(polydata);
 	qInteractor->AddObserver(vtkCommand::TimerEvent, tCBInstance);
 
+	//testing
+	mainData.shortestPath(0, 1);
 
 	///////////////////////////////////////////
 	/////////				final part

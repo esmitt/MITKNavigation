@@ -97,6 +97,7 @@ class Graph
 private:
 	std::vector<GraphVertex> m_vGraphVertexes;
 	vtkSmartPointer<vtkPoints> m_vtkPoints;
+	typedef std::pair<int, int> tEdge;	//to define an edge as the link between two nodes represented by their indexes
 
 public:
 	void addGraphVertex(GraphVertex v);
@@ -109,6 +110,10 @@ public:
 
 	// Return a MITK node to be added into the drawing pipeline
 	mitk::DataNode::Pointer getDrawablePoints();
+
+	void printPath(std::vector<int> parent, int j);
+	// Find the shortest path from node i to node j
+	std::vector<int> shortestPath(const int & indexI, const int indexJ);
 
 	//print for testing
 	void print()

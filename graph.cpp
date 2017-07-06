@@ -1,6 +1,8 @@
 #include "graph.h"
 #include <assert.h>
 
+#define INF 0x3f3f3f3f
+
 /// Constructor
 Graph::Graph()
 {
@@ -155,4 +157,89 @@ mitk::DataNode::Pointer Graph::getDrawablePoints()
 	// Set the surface into the Datanode
 	pointResult->SetData(points_surface);
 	return pointResult;
+}
+
+// Function to print shortest path from source to j
+// using parent array
+void Graph::printPath(std::vector<int> parent, int j)
+{
+	// Base Case : If j is source
+	if (parent[j] == -1)
+		return;
+
+	printPath(parent, parent[j]);
+
+	printf("%d ", j);
+}
+
+//extracted from http://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-using-set-in-stl/
+std::vector<int> Graph::shortestPath(const int & indexI, const int indexJ)
+{
+	std::vector<int> vEdges(m_vGraphVertexes.size(), -1);	//-1 is no parent at all
+
+	std::set<Graph::tEdge> setds;
+	// Create a vector for distances and initialize all
+	// distances as infinite (INF)
+	std::vector<int> dist(m_vGraphVertexes.size(), INF);
+
+	// Insert source itself in Set and initialize its
+	// distance as 0.
+	setds.insert(std::make_pair(0, indexI));
+	dist[indexI] = 0;
+
+	//Looping till all shortest distance are finalized
+	//	then setds will become empty 
+	while (!setds.empty()) 
+	{
+		// The first vertex in Set is the minimum distance
+		Graph::tEdge tmp = *(setds.begin());
+		// vertex, extract it from set.
+		setds.erase(setds.begin());
+		// vertex label is stored in second of pair (it
+		// has to be done this way to keep the vertices
+		// sorted distance (distance must be first item
+		// in pair)
+		int u = tmp.second;
+		// 'i' is used to get all adjacent vertices of a vertex
+		//std::list<Graph::tEdge>::iterator i;
+		std::set <std::pair<int, double>> adj;
+		for (auto i = m_vGraphVertexes[u].getNeighbours().begin(); i != m_vGraphVertexes[u].getNeighbours().end(); ++i)
+		{
+			// Get vertex label and weight of current adjacent
+			// of u.
+			int v = (*i).first;
+			double weight = (*i).second;
+			//  If there is shorter path to v through u.
+			if (dist[v] > dist[u] + weight)
+			{
+				/*  If distance of v is not INF then it must be in
+				our set, so removing it and inserting again
+				with updated less distance.
+				Note : We extract only those vertices from Set
+				for which distance is finalized. So for them,
+				we would never reach here.  */
+				if (dist[v] != INF)
+					setds.erase(setds.find(std::make_pair(dist[v], v)));
+
+				// Updating distance of v
+				dist[v] = dist[u] + weight;
+				vEdges[v] = u;
+				setds.insert(std::make_pair(dist[v], v));
+			}
+		}
+	}
+	//// Print shortest distances stored in dist[]
+	//printf("Vertex   Distance from Source\n");
+	//for (int i = 0; i < m_vGraphVertexes.size(); ++i)
+	//	printf("%d \t\t %d\n", i, dist[i]);
+
+	int src = 0;
+	//printf("Vertex\t  Distance\tPath");
+	//for (int i = 1; i <  m_vGraphVertexes.size(); i++)
+	//{
+		//printf("\n%d -> %d \t\t %d\t\t%d ", src, i, dist[i], src);
+		printPath(vEdges, 5379);
+	//}
+
+	return vEdges;
 }
