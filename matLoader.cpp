@@ -75,6 +75,7 @@ bool CMatLoader::OpenFile(std::string strFilename, Graph & theData)
 				theData.addGraphVertex(GraphVertex(iIndex++, values[1], values[0], values[2]));
 			}
 		}
+
 		theData.computeDistances();	//calculate distance between vertexes
 		delete values;
 	}

@@ -107,7 +107,8 @@ int main(int argc, char *argv[])
 
 	// Add a data node
 	//ds->Add(pointResult);
-	ds->Add(mainData.getDrawableObject());
+	//ds->Add(mainData.getDrawableObject());
+	ds->Add(mainData.getDrawableLines());
 	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor

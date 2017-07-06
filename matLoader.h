@@ -15,7 +15,7 @@
 #include <vtkPoints.h>
 #include <vtkSmartPointer.h>
 
-#include "datastructure.h"
+#include "graph.h"
 
 ///Class to handle a Matlab (.mat) files from C++
 class CMatLoader

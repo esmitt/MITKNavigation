@@ -8,30 +8,31 @@
 #include <mitkIOUtil.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
+#include <vtkLineSource.h>
 #include <vtkSmartPointer.h>
 #include <vtkVertexGlyphFilter.h>
 
 class GraphVertex
 {
-private:	
+private:
 	int m_iIndex;	//index of the GraphVertex
 	std::set <std::pair<int, double>> m_vNeighbours;	//store a pair of values (id, distance) into a set
-	double m_Point[3];	//point 3D itself
+	double m_Point[3];	//point 3D
 
 public:
-	GraphVertex() 
-	{ 
-		m_Point[0] = m_Point[1] = m_Point[2] = 0; 
+	GraphVertex()
+	{
+		m_Point[0] = m_Point[1] = m_Point[2] = 0;
 		m_iIndex = -1;
 	}
 
-	GraphVertex(double* value) 
-	{ 
+	GraphVertex(double* value)
+	{
 		m_Point[0] = value[0]; m_Point[1] = value[1]; m_Point[2] = value[2];
 		m_iIndex = -1;
 	}
 
-	GraphVertex(int index, double* value) 
+	GraphVertex(int index, double* value)
 	{
 		m_Point[0] = value[0]; m_Point[1] = value[1]; m_Point[2] = value[2];
 		m_iIndex = index;
@@ -43,7 +44,7 @@ public:
 		m_iIndex = index;
 	}
 
-	GraphVertex(const GraphVertex &v) 
+	GraphVertex(const GraphVertex &v)
 	{
 		m_Point[0] = v.m_Point[0];
 		m_Point[1] = v.m_Point[1];
@@ -51,25 +52,30 @@ public:
 		m_iIndex = v.m_iIndex;
 	}
 
-	~GraphVertex(){}
-	
+	~GraphVertex() {}
+
 	//functions
 	double & operator[](int index) { return m_Point[index]; }
-	
+
 	//add an edge
 	void link(int index, double distance = 0)
 	{
 		m_vNeighbours.insert(std::make_pair(index, distance));
 	}
 
-	inline int getIndex() {	return m_iIndex;	}
+	inline int getIndex() { return m_iIndex; }
 
 	double* get_ptr() { return m_Point; }
 
-	void printNeighbours() 
+	std::set<std::pair<int, double>>& getNeighbours()
+	{
+		return m_vNeighbours;
+	}
+
+	void printNeighbours()
 	{
 		auto iIt = m_vNeighbours.begin();
-		while (iIt != m_vNeighbours.end()) 
+		while (iIt != m_vNeighbours.end())
 		{
 			std::cout << "(" << m_iIndex << ", " << iIt->first << ") = " << iIt->second << endl;
 			iIt++;
@@ -77,23 +83,35 @@ public:
 	}
 };
 
-struct Graph 
+struct Graph
 {
 private:
 	std::vector<GraphVertex> m_vGraphVertexes;
+	vtkSmartPointer<vtkPoints> m_vtkPoints;
 
 public:
-	void addGraphVertex(GraphVertex v) 
+	void addGraphVertex(GraphVertex v)
 	{
-		m_vGraphVertexes.push_back(v); 
+		m_vGraphVertexes.push_back(v);
+		m_vtkPoints->InsertNextPoint(v.get_ptr());
 	}
-	
-	void addEdgeIndex(int index1, int index2) 
+
+	void constructVTKPoints()
 	{
-		m_vGraphVertexes[index1].link(index2); 
+		m_vtkPoints->SetNumberOfPoints(m_vGraphVertexes.size());	//set the number of vertexes for efficiency
+																															//copy points into
+		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&](GraphVertex& v)
+		{
+			m_vtkPoints->SetPoint(v.getIndex(), v.get_ptr());
+		});
+	}
+
+	void addEdgeIndex(int index1, int index2)
+	{
+		m_vGraphVertexes[index1].link(index2);
 		m_vGraphVertexes[index2].link(index1);	//bidirectional?
 	}
-	
+
 	// Compute the euclidean distance between all pair of nodes nodes/vertexes
 	void computeDistances(double epsilon = 99)
 	{
@@ -110,7 +128,7 @@ public:
 				//here should store only the required ones. Only store the distances less than a certain criteria
 				//for example less than the radius of a circle
 				// ** for now is storing all distances! (this is bad)
-				if(distance < epsilon)	//only consider the less than EPSILON
+				if (distance < epsilon)	//only consider the less than EPSILON
 				{
 					iIter->link((*jIter).getIndex(), distance);
 					jIter->link((*iIter).getIndex(), distance);	//bidirectional
@@ -120,16 +138,16 @@ public:
 			iIter++;
 		}//end while
 
-		//print just to see
-		//std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](GraphVertex & v) 
-		//{
-		//	v.printNeighbours();
-		//	//std::cout << v.getIndex() << std::endl;
-		//});
+		 //print just to see
+		 //std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](GraphVertex & v) 
+		 //{
+		 //	v.printNeighbours();
+		 //	//std::cout << v.getIndex() << std::endl;
+		 //});
 	}
 
 	//print for testing
-	void print() 
+	void print()
 	{
 		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](GraphVertex v)
 		{
@@ -138,22 +156,45 @@ public:
 	}
 
 	// Return a MITK node to be added into the drawing pipeline
-	mitk::DataNode::Pointer getDrawableObject() 
+	mitk::DataNode::Pointer getDrawableLines()
 	{
-		//add points
-		vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
-		//m_vGraphVertexes
-		vtkSmartPointer<vtkPoints> allPoints = vtkSmartPointer<vtkPoints>::New();
-		
-		allPoints->SetNumberOfPoints(m_vGraphVertexes.size());	//set the number of vertexes for efficiency
-		//copy points into
-		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&](GraphVertex& v)
-		{
-			allPoints->SetPoint(v.getIndex(), v.get_ptr());
-		});		
+		vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+		polydata->Allocate();
 
-		pointsPolydata->SetPoints(allPoints);
-		cout << "number of points: " << pointsPolydata->GetNumberOfPoints() << endl;
+		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&polydata](GraphVertex & v)
+		{
+			std::set<std::pair<int, double>> theSet = v.getNeighbours();	//explore each neighbour
+			std::for_each(theSet.begin(), theSet.end(), [&polydata, &v](std::pair<int, double> element)
+			{
+				vtkIdType line[2] = { v.getIndex(), element.first };
+				polydata->InsertNextCell(VTK_LINE, 2, line);
+			});
+		});
+
+		//set the lines info into the polydata
+		polydata->SetPoints(m_vtkPoints);
+
+		// Create the MITK surface object
+		mitk::Surface::Pointer lines_surface = mitk::Surface::New();
+		lines_surface->SetVtkPolyData(polydata);
+
+		// Create a new node in DataNode with properties
+		mitk::DataNode::Pointer linesResult = mitk::DataNode::New();
+		linesResult->SetColor(0, 1, 0);
+		std::string nameOfOuputImage = "lines-in-path";
+		linesResult->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
+
+		// Set the surface into the Datanode
+		linesResult->SetData(lines_surface);
+		return linesResult;
+	}
+
+	// Return a MITK node to be added into the drawing pipeline
+	mitk::DataNode::Pointer getDrawableObject()
+	{
+		//add points into a vtkPolyData structure
+		vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
+		pointsPolydata->SetPoints(m_vtkPoints);
 
 		vtkSmartPointer<vtkVertexGlyphFilter> vertexFilter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
 		vertexFilter->SetInputData(pointsPolydata);
@@ -177,13 +218,16 @@ public:
 		return pointResult;
 	}
 
-	Graph() 
+	Graph()
 	{
-	
+		m_vtkPoints = vtkSmartPointer<vtkPoints>::New();
 	}
 
-	~Graph() {}
-	
+	~Graph()
+	{
+		//m_vtkPoints->Delete();
+	}
+
 	//std::vector<Vertex>::iterator findVertexIndex(double* val, bool& res)
 	//{
 	//	std::vector<Vertex>::iterator it;
@@ -232,11 +276,3 @@ public:
 	//	addEdgeIndices(node1Index, node2Index);
 	//}
 };
-
-class CDataStructure
-{
-public:
-	CDataStructure();
-	~CDataStructure();
-};
-
