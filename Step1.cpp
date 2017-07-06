@@ -58,7 +58,9 @@ int main(int argc, char *argv[])
 	mitk::StandaloneDataStorage::Pointer ds = mitk::StandaloneDataStorage::New();
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
-	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	std::cout << "Status: Reading the OBJ file ..." << endl;
+	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	std::cout << "Status: Reading the MAT file ..." << endl;
 	if(!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat", mainData))
 		return EXIT_FAILURE;
 
@@ -107,7 +109,8 @@ int main(int argc, char *argv[])
 
 	// Add a data node
 	//ds->Add(pointResult);
-	//ds->Add(mainData.getDrawableObject());
+	std::cout << "Status: Adding surfaces from Graph ..." << endl;
+	ds->Add(mainData.getDrawablePoints());
 	ds->Add(mainData.getDrawableLines());
 	ds->Print(cout);
 
@@ -118,9 +121,9 @@ int main(int argc, char *argv[])
 	qInteractor->AddObserver(vtkCommand::TimerEvent, tCBInstance);
 
 
-	////////////////////////////////////////////////////////////////////////
-	////////////////////////////				final part
-	////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////
+	/////////				final part
+	//////////////////////////////////////////
 	// Change the color of Background
 	rendered->GetVtkRenderer()->SetBackground(0.15, 0.15, 0.15);
 
