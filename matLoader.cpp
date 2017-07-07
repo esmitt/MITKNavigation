@@ -3,7 +3,6 @@
 #include <iostream>
 #include "utility.h"
 
-
 CMatLoader::CMatLoader()
 {
 	m_pFileMat = nullptr;
@@ -15,73 +14,82 @@ CMatLoader::~CMatLoader()
 /// Function to load the file
 /// @param strFilename Name of the file to open
 /// @return true is file was open correctly, false otherwise
-bool CMatLoader::OpenFile(std::string strFilename, Graph & theData)
+bool CMatLoader::OpenFile(std::string strFilename, CGraph & theData)
 {
-	m_pFileMat = matOpen(strFilename.c_str(), "r");
-	if (m_pFileMat == nullptr)	//for any reason, can not open it
-		return false;
-
-	/////////////////////////////////////////////////
-	//read the main structure
-	/////////////////////////////////////////////////
-	mxArray *pArr = matGetVariable(m_pFileMat, "G");
-
-	if ((pArr != nullptr) && !mxIsEmpty(pArr) && mxIsStruct(pArr))
+	try 
 	{
-		mwSize num = mxGetNumberOfFields(pArr);	//number of fields
+		m_pFileMat = matOpen(strFilename.c_str(), "r");
+		if (m_pFileMat == nullptr)	//for any reason, can not open it
+			return false;
+
+		/////////////////////////////////////////////////
+		//read the main structure
+		/////////////////////////////////////////////////
+		mxArray *pArr = matGetVariable(m_pFileMat, "G");
+
+		if ((pArr != nullptr) && !mxIsEmpty(pArr) && mxIsStruct(pArr))
+		{
+			std::cout << "Status: Read from Graph the G value ..." << endl;
+			mwSize num = mxGetNumberOfFields(pArr);	//number of fields
 
 		/////////////////////////////////////////////////
 		//reading the 1st field (in this case G.e)
 		/////////////////////////////////////////////////
-		std::vector<double> v;
-		mxArray *pArrToE = mxGetField(pArr, 0, "e");	//get the field 
-		mwSize iDimE = mxGetNumberOfElements(pArrToE);	
-		double *pr = mxGetPr(pArrToE);
-		//copy into a STL structure
-		if (pr != nullptr)
-		{
-			v.resize(iDimE);
-			v.assign(pr, pr + iDimE);
-		}
-		//for now, just printing
-		//for (size_t i = 0; i<v.size(); ++i)
-		//	std::cout << v[i] << std::endl;
-	}
-
-	/////////////////////////////////////////////////
-	//read the skel
-	/////////////////////////////////////////////////
-	mxArray *pArrToSkel = matGetVariable(m_pFileMat, "skel");
-	if ((pArrToSkel != nullptr) && !mxIsEmpty(pArrToSkel) && mxIsLogical(pArrToSkel))
-	{
-		mwSize iDimSkel = mxGetNumberOfElements(pArrToSkel);
-		bool *prLog = mxGetLogicals(pArrToSkel);
-
-		size_t nDim = mxGetNumberOfDimensions(pArrToSkel);	//number of dimensions 2D, 3D (i.e. 2, 3)
-		const size_t* dime = mxGetDimensions(pArrToSkel);		//get the array of size nDim with the sizes
-		
-		//m_vPointsSkel =	vtkSmartPointer<vtkPoints>::New();
-
-		int* values = new int[nDim];
-		int iIndex = 0;
-		//store only all true-logic points
-		for (size_t i = 0; i < iDimSkel; ++i)
-		{
-			if (prLog[i])	//the only who is true/remarkable
+			std::vector<double> v;
+			mxArray *pArrToE = mxGetField(pArr, 0, "e");	//get the field 
+			mwSize iDimE = mxGetNumberOfElements(pArrToE);
+			double *pr = mxGetPr(pArrToE);
+			//copy into a STL structure
+			if (pr != nullptr)
 			{
-				CUtility::getInstance()->ind2sub(dime, nDim, i, values);	//function from index to [x, y, z]
-				//m_vPointsSkel->InsertNextPoint(values[1], values[0], values[2]);
-				//store points as vertexes into the graph
-				theData.addGraphVertex(GraphVertex(iIndex++, values[1], values[0], values[2]));
+				v.resize(iDimE);
+				v.assign(pr, pr + iDimE);
 			}
+			//for now, just printing
+			//for (size_t i = 0; i<v.size(); ++i)
+			//	std::cout << v[i] << std::endl;
 		}
 
-		theData.computeDistances();	//calculate distance between vertexes
-		delete values;
-	}
+		/////////////////////////////////////////////////
+		//read the skel
+		/////////////////////////////////////////////////
+		mxArray *pArrToSkel = matGetVariable(m_pFileMat, "skel");
+		if ((pArrToSkel != nullptr) && !mxIsEmpty(pArrToSkel) && mxIsLogical(pArrToSkel))
+		{
+			std::cout << "Status: Read from Graph the skel value ..." << endl;
 
-	//cleanup
-	mxDestroyArray(pArr);
-	matClose(m_pFileMat);
+			mwSize iDimSkel = mxGetNumberOfElements(pArrToSkel);
+			bool *prLog = mxGetLogicals(pArrToSkel);
+
+			size_t nDim = mxGetNumberOfDimensions(pArrToSkel);	//number of dimensions 2D, 3D (i.e. 2, 3)
+			const size_t* dime = mxGetDimensions(pArrToSkel);		//get the array of size nDim with the sizes
+
+			int* values = new int[nDim];
+			int iIndex = 0;
+			//store only all true-logic points
+			for (size_t i = 0; i < iDimSkel; ++i)
+			{
+				if (prLog[i])	//the only who is true/remarkable
+				{
+					CUtility::getInstance()->ind2sub(dime, nDim, i, values);	//function from index to [x, y, z]
+					//store points as vertexes into the graph
+					theData.addGraphVertex(CGraphVertex(iIndex++, values[1], values[0], values[2]));
+				}
+			}
+			std::cout << "Status: Compute distances ..." << endl;
+			//related to the graph
+			theData.computeDistances();	//calculate distance between vertexes
+			delete values;
+		}
+
+		//cleanup
+		mxDestroyArray(pArr);
+		matClose(m_pFileMat);
+	}
+	catch (char* str) 
+	{
+		cout << str << endl;
+		return false;
+	}
 	return true;
 }

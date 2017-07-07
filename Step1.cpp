@@ -25,7 +25,7 @@ See LICENSE.txt or http://www.mitk.org for details.
 #include <mitkIOUtil.h>
 
 //customized
-#include "matLoader.h"
+#include "navigation.h"
 #include "vtkTimerUser.h"
 
 #include <vtkConeSource.h>
@@ -46,8 +46,8 @@ See LICENSE.txt or http://www.mitk.org for details.
 int main(int argc, char *argv[])
 {
 	QApplication qtapplication(argc, argv);
-	CMatLoader matlabObj;
-	Graph mainData;
+	CNavigation navigation;
+
 	// Register Qmitk-dependent global instances
 	QmitkRegisterClasses();
 
@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	std::cout << "Status: Reading the OBJ file ..." << endl;
-	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
 	std::cout << "Status: Reading the MAT file ..." << endl;
-	if(!matlabObj.OpenFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat", mainData))
+	if(!navigation.openMATFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
 		return EXIT_FAILURE;
 
 	// Create a RenderWindow
@@ -110,8 +110,11 @@ int main(int argc, char *argv[])
 	// Add a data node
 	//ds->Add(pointResult);
 	std::cout << "Status: Adding surfaces from Graph ..." << endl;
-	ds->Add(mainData.getDrawablePoints());
-	ds->Add(mainData.getDrawableLines());
+	
+	ds->Add(navigation.getDrawablePoints());
+	//ds->Add(navigation.getDrawableLines());
+	navigation.computePath();
+	ds->Add(navigation.getDrawingPath(1, 135));
 	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
@@ -121,7 +124,7 @@ int main(int argc, char *argv[])
 	qInteractor->AddObserver(vtkCommand::TimerEvent, tCBInstance);
 
 	//testing
-	mainData.shortestPath(0, 1);
+	//mainData.shortestPath(0, 1);
 
 	///////////////////////////////////////////
 	/////////				final part

@@ -25,10 +25,11 @@ private:
 	std::vector<bool> m_vSkel;	//vector of boolean to store the skeleton
 	
 public:
-	//vtkSmartPointer<vtkPoints> m_vPointsSkel;	//points to store the skeleton
 	CMatLoader();
 	~CMatLoader();
-	bool OpenFile(std::string strFilename, Graph & theData);
+	
+	// Function to open a MAT file, and store info into a graph
+	bool OpenFile(std::string strFilename, CGraph & theData);
 };
 
 #endif	//_MAT_LOADER_H_

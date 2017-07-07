@@ -9,6 +9,12 @@
 #include <mitkIOUtil.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
+#include <vtkSmartPointer.h>
+#include <vtkPointSource.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkLabeledDataMapper.h>
+#include <vtkVectorText.h>
 #include <vtkGlyph3D.h>
 #include <vtkLineSource.h>
 #include <vtkSphereSource.h>
@@ -19,39 +25,39 @@
 // @date 07/2017
 
 /// Struct to handle a graph's vertex. It stores an ID, a 3D point, and a set of linked neighbours
-struct GraphVertex
+struct CGraphVertex
 {
 private:
-	int m_iIndex;	//index of the GraphVertex
+	int m_iIndex;	//index of the CGraphVertex
 	std::set <std::pair<int, double>> m_vNeighbours;	//store a pair of values (id, distance) into a set
 	double m_Point[3];	//point 3D
 
 public:
-	GraphVertex()
+	CGraphVertex()
 	{
 		m_Point[0] = m_Point[1] = m_Point[2] = 0;
 		m_iIndex = -1;
 	}
 
-	GraphVertex(double* value)
+	CGraphVertex(double* value)
 	{
 		m_Point[0] = value[0]; m_Point[1] = value[1]; m_Point[2] = value[2];
 		m_iIndex = -1;
 	}
 
-	GraphVertex(int index, double* value)
+	CGraphVertex(int index, double* value)
 	{
 		m_Point[0] = value[0]; m_Point[1] = value[1]; m_Point[2] = value[2];
 		m_iIndex = index;
 	}
 
-	GraphVertex(int index, double x, double y, double z)
+	CGraphVertex(int index, double x, double y, double z)
 	{
 		m_Point[0] = x; m_Point[1] = y; m_Point[2] = z;
 		m_iIndex = index;
 	}
 
-	GraphVertex(const GraphVertex &v)
+	CGraphVertex(const CGraphVertex &v)
 	{
 		m_Point[0] = v.m_Point[0];
 		m_Point[1] = v.m_Point[1];
@@ -59,7 +65,7 @@ public:
 		m_iIndex = v.m_iIndex;
 	}
 
-	~GraphVertex() {}
+	~CGraphVertex() {}
 
 	//functions
 	double & operator[](int index) { return m_Point[index]; }
@@ -91,19 +97,24 @@ public:
 };
 
 /// Class to handle a directed/undirected graph using an adjacency list.
-/// The vertexes are GraphVertex datatype, also stores vtkPoints to render
-class Graph
+/// The vertexes are CGraphVertex datatype, also stores vtkPoints to render
+class CGraph
 {
 private:
-	std::vector<GraphVertex> m_vGraphVertexes;
+	std::vector<CGraphVertex> m_vGraphVertexes;
 	vtkSmartPointer<vtkPoints> m_vtkPoints;
 	typedef std::pair<int, int> tEdge;	//to define an edge as the link between two nodes represented by their indexes
 
 public:
-	void addGraphVertex(GraphVertex v);
+	void addGraphVertex(CGraphVertex v);
 	void constructVTKPoints();
 	void addEdgeIndex(int index1, int index2);
-	void computeDistances(double epsilon = CUtility::getInstance()->RADIUS_DISTANCE);	// Compute the euclidean distance between all pair of nodes nodes/vertexes
+	
+	// Get the polydata associated with the path in the vector
+	vtkSmartPointer<vtkPolyData> getPolyDataPath(std::vector<int> path);
+
+	// Compute the euclidean distance between all pair of nodes nodes/vertexes
+	void computeDistances(double epsilon = CUtility::getInstance()->RADIUS_DISTANCE);	
 
 	// Return a MITK node to be added into the drawing pipeline
 	mitk::DataNode::Pointer getDrawableLines();
@@ -111,20 +122,20 @@ public:
 	// Return a MITK node to be added into the drawing pipeline
 	mitk::DataNode::Pointer getDrawablePoints();
 
-	void printPath(std::vector<int> parent, int j);
-	// Find the shortest path from node i to node j
-	std::vector<int> shortestPath(const int & indexI, const int indexJ);
+	// Find the shortest path from node to all nodex
+	std::vector<int> shortestPath(const int & indexI = 0);
 
 	//print for testing
 	void print()
 	{
-		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](GraphVertex v)
+		std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](CGraphVertex v)
 		{
 			std::cout << v.getIndex() << std::endl;
 		});
 	}
-	Graph();
-	~Graph();
+
+	CGraph();
+	~CGraph();
 };
 
 //std::vector<Vertex>::iterator findVertexIndex(double* val, bool& res)

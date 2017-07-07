@@ -4,18 +4,18 @@
 #define INF 0x3f3f3f3f
 
 /// Constructor
-Graph::Graph()
+CGraph::CGraph()
 {
 	m_vtkPoints = vtkSmartPointer<vtkPoints>::New();
 }
 
 /// Destructor
-Graph::~Graph() {}
+CGraph::~CGraph() {}
 
 /// Function to add a single vertex into the Graph. Also, add the vtkPoint
 ///
 /// @param v vertex to add into the graph
-void Graph::addGraphVertex(GraphVertex v)
+void CGraph::addGraphVertex(CGraphVertex v)
 {
 	m_vGraphVertexes.push_back(v);
 	m_vtkPoints->InsertNextPoint(v.get_ptr());
@@ -23,13 +23,13 @@ void Graph::addGraphVertex(GraphVertex v)
 
 /// Function to construct the array of vtkPoints with all points in the Graph
 /// IMPORTANT: the variable m_vtkPoints should be with data
-void Graph::constructVTKPoints()
+void CGraph::constructVTKPoints()
 {
 	assert(m_vGraphVertexes.size());	//DEBUG: should be different from zero
 	
 	m_vtkPoints->SetNumberOfPoints(m_vGraphVertexes.size());	//set the number of vertexes for efficiency
 	//copy points into
-	std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&](GraphVertex& v)
+	std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&](CGraphVertex& v)
 	{
 		m_vtkPoints->SetPoint(v.getIndex(), v.get_ptr());
 	});
@@ -39,7 +39,7 @@ void Graph::constructVTKPoints()
 ///
 /// @param index1 integer index of vertex to link
 /// @param index2 integer index of vertex to link
-void Graph::addEdgeIndex(int index1, int index2)
+void CGraph::addEdgeIndex(int index1, int index2)
 {
 	assert(m_vGraphVertexes.size());	//DEBUG: should be >= 0
 	assert(index1 && index2);//DEBUG: should be positive
@@ -51,7 +51,7 @@ void Graph::addEdgeIndex(int index1, int index2)
 ///
 /// @param epsilon determines the distance to connect a vertex with another one.
 /// It should be the radius of a sphere, given the condition to test
-void Graph::computeDistances(double epsilon )
+void CGraph::computeDistances(double epsilon )
 {
 	auto iIter = m_vGraphVertexes.begin();
 	const auto iEnd = m_vGraphVertexes.end();	//to indicate the end
@@ -77,11 +77,31 @@ void Graph::computeDistances(double epsilon )
 	}//end while
 
 	 //print just to see
-	 //std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](GraphVertex & v) 
+	 //std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [](CGraphVertex & v) 
 	 //{
 	 //	v.printNeighbours();
 	 //	//std::cout << v.getIndex() << std::endl;
 	 //});
+}
+
+vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
+{
+	assert(m_vGraphVertexes.size());	//it should exists first
+	assert(path.size());	// and path should exists
+
+	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+	polydata->Allocate();
+	//set the points info into the polydata
+	polydata->SetPoints(m_vtkPoints);
+
+	//fill the polydata
+	for (int i = 1; i < path.size(); i++) 
+	{
+		vtkIdType line[2] = {i-1, i};
+		polydata->InsertNextCell(VTK_LINE, 2, line);
+	}
+	
+	return polydata;
 }
 
 /// Function which creates a Surface (MITK) and associate all internal data on it. 
@@ -89,12 +109,13 @@ void Graph::computeDistances(double epsilon )
 /// Surface contains lines linked between them in the graph
 ///
 /// @return a pointer to a datanode of MITK to be added into the existing drawing pipeline
-mitk::DataNode::Pointer Graph::getDrawableLines()
+mitk::DataNode::Pointer CGraph::getDrawableLines()
 {
 	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 	polydata->Allocate();
 
-	std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&polydata](GraphVertex & v)
+	//fill the polydata
+	std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&polydata](CGraphVertex & v)
 	{
 		std::set<std::pair<int, double>> theSet = v.getNeighbours();	//explore each neighbour
 		std::for_each(theSet.begin(), theSet.end(), [&polydata, &v](std::pair<int, double> element)
@@ -104,7 +125,7 @@ mitk::DataNode::Pointer Graph::getDrawableLines()
 		});
 	});
 
-	//set the lines info into the polydata
+	//set the points info into the polydata
 	polydata->SetPoints(m_vtkPoints);
 
 	// Create the MITK surface object
@@ -127,13 +148,13 @@ mitk::DataNode::Pointer Graph::getDrawableLines()
 /// Surface contains points of the graph
 ///
 /// @return a pointer to a datanode of MITK to be added into the existing drawing pipeline
-mitk::DataNode::Pointer Graph::getDrawablePoints()
+mitk::DataNode::Pointer CGraph::getDrawablePoints()
 {
 	//add points into a vtkPolyData structure
 	vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
 	pointsPolydata->SetPoints(m_vtkPoints);
 
-	vtkSmartPointer<vtkGlyph3D> glyph3D =	vtkSmartPointer<vtkGlyph3D>::New();
+	vtkSmartPointer<vtkGlyph3D> glyph3D = vtkSmartPointer<vtkGlyph3D>::New();
 	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
 	sphereSource->SetRadius(0.1f);
 
@@ -159,25 +180,18 @@ mitk::DataNode::Pointer Graph::getDrawablePoints()
 	return pointResult;
 }
 
-// Function to print shortest path from source to j
-// using parent array
-void Graph::printPath(std::vector<int> parent, int j)
+// Return all paths (if exists) between all nodes.
+// extracted from http://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-using-set-in-stl/
+// IMPORTANT: this should be invoked once!
+//
+// @param indexI starting node
+// @return vector<int> with indexes of path, stored in reverse order (always storing the parent of i-th node)
+std::vector<int> CGraph::shortestPath(const int & indexI)
 {
-	// Base Case : If j is source
-	if (parent[j] == -1)
-		return;
-
-	printPath(parent, parent[j]);
-
-	printf("%d ", j);
-}
-
-//extracted from http://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-using-set-in-stl/
-std::vector<int> Graph::shortestPath(const int & indexI, const int indexJ)
-{
+	//vector to store the parents of each vertex
 	std::vector<int> vEdges(m_vGraphVertexes.size(), -1);	//-1 is no parent at all
 
-	std::set<Graph::tEdge> setds;
+	std::set<CGraph::tEdge> setds;
 	// Create a vector for distances and initialize all
 	// distances as infinite (INF)
 	std::vector<int> dist(m_vGraphVertexes.size(), INF);
@@ -192,7 +206,7 @@ std::vector<int> Graph::shortestPath(const int & indexI, const int indexJ)
 	while (!setds.empty()) 
 	{
 		// The first vertex in Set is the minimum distance
-		Graph::tEdge tmp = *(setds.begin());
+		CGraph::tEdge tmp = *(setds.begin());
 		// vertex, extract it from set.
 		setds.erase(setds.begin());
 		// vertex label is stored in second of pair (it
@@ -223,23 +237,11 @@ std::vector<int> Graph::shortestPath(const int & indexI, const int indexJ)
 
 				// Updating distance of v
 				dist[v] = dist[u] + weight;
-				vEdges[v] = u;
+				vEdges[u] = v;
 				setds.insert(std::make_pair(dist[v], v));
 			}
 		}
 	}
-	//// Print shortest distances stored in dist[]
-	//printf("Vertex   Distance from Source\n");
-	//for (int i = 0; i < m_vGraphVertexes.size(); ++i)
-	//	printf("%d \t\t %d\n", i, dist[i]);
-
-	int src = 0;
-	//printf("Vertex\t  Distance\tPath");
-	//for (int i = 1; i <  m_vGraphVertexes.size(); i++)
-	//{
-		//printf("\n%d -> %d \t\t %d\t\t%d ", src, i, dist[i], src);
-		printPath(vEdges, 5379);
-	//}
-
+	// get path in order
 	return vEdges;
 }
