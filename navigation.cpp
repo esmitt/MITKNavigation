@@ -44,7 +44,7 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 
 	//compute the nodes involves in the path, starting from i and finished in j (included)
 	std::vector<int> path;
-	if (pathInGraph(i, j, path)) 
+	if (pathInGraph(i, j, path))
 			path.insert(path.begin(), i);	//insert the first one at the top, to complete the path
 	else 
 	{
@@ -52,18 +52,21 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 		return nullptr;
 	}
 	
+	std::for_each(path.begin(), path.end(), [](int i) {cout << i << " "; });
+
 	// Create the MITK surface object
 	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
 	lines_surface->SetVtkPolyData(m_graph.getPolyDataPath(path));
 
 	// Create a new node in DataNode with properties
 	mitk::DataNode::Pointer result = mitk::DataNode::New();
-	result->SetColor(0, 1, 0);
+	result->SetColor(0.1, 0.6, 0.9);
 	std::string nameOfOuputImage = "path";
 	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
 	
 	lines_surface->Update();
 	result->SetData(lines_surface);
-	
+	float width = 3;
+	result->SetFloatProperty("material.wireframeLineWidth", width);
 	return result;
 }
