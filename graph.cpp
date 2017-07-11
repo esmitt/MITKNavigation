@@ -91,16 +91,17 @@ vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
 
 	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 	polydata->Allocate();
-	//set the points info into the polydata
-	polydata->SetPoints(m_vtkPoints);
+	
 
 	//fill the polydata
 	for (int i = 1; i < path.size(); i++) 
 	{
-		vtkIdType line[2] = {i-1, i};
+		vtkIdType line[2] = { path[i-1], path[i] };
 		polydata->InsertNextCell(VTK_LINE, 2, line);
 	}
-	
+
+	//set the points info into the polydata
+	polydata->SetPoints(m_vtkPoints);
 	return polydata;
 }
 
@@ -214,14 +215,14 @@ std::vector<int> CGraph::shortestPath(const int & indexI)
 	//vector to store the parents of each vertex
 	std::vector<int> vEdges(m_vGraphVertexes.size(), -1);	//-1 is no parent at all
 
-	std::set<CGraph::tEdge> setds;
+	std::set<std::pair<int, double>> setds;
 	// Create a vector for distances and initialize all
 	// distances as infinite (INF)
 	std::vector<int> dist(m_vGraphVertexes.size(), INF);
 
 	// Insert source itself in Set and initialize its
 	// distance as 0.
-	setds.insert(std::make_pair(0, indexI));
+	setds.insert(std::make_pair(indexI, 0));
 	dist[indexI] = 0;
 
 	//Looping till all shortest distance are finalized
@@ -229,14 +230,15 @@ std::vector<int> CGraph::shortestPath(const int & indexI)
 	while (!setds.empty()) 
 	{
 		// The first vertex in Set is the minimum distance
-		CGraph::tEdge tmp = *(setds.begin());
+		std::pair<int, double> tmp = *(setds.begin());
 		// vertex, extract it from set.
 		setds.erase(setds.begin());
 		// vertex label is stored in second of pair (it
 		// has to be done this way to keep the vertices
 		// sorted distance (distance must be first item
 		// in pair)
-		int u = tmp.second;
+		//int u = tmp.second;
+		int u = tmp.first;
 		// 'i' is used to get all adjacent vertices of a vertex
 		//std::list<Graph::tEdge>::iterator i;
 		std::set <std::pair<int, double>> adj;
@@ -255,16 +257,29 @@ std::vector<int> CGraph::shortestPath(const int & indexI)
 				Note : We extract only those vertices from Set
 				for which distance is finalized. So for them,
 				we would never reach here.  */
-				if (dist[v] != INF)
-					setds.erase(setds.find(std::make_pair(dist[v], v)));
-
+				if (dist[v] != INF) 
+				{
+					auto o = std::make_pair(v, dist[v]);
+					auto p = setds.find(o);
+					if(p != setds.end())
+						setds.erase(p);
+				}
+					
 				// Updating distance of v
 				dist[v] = dist[u] + weight;
-				vEdges[u] = v;
-				setds.insert(std::make_pair(dist[v], v));
+				vEdges[v] = u;
+				setds.insert(std::make_pair(v, dist[v]));
 			}
 		}
 	}
 	// get path in order
+
+	//int parent = vEdges[3136];
+	//while (parent != -1) 
+	//{
+	//	cout << parent << " ";
+	//	parent = vEdges[parent];
+	//}
+
 	return vEdges;
 }

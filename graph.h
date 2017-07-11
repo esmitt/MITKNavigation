@@ -94,6 +94,15 @@ public:
 			iIt++;
 		}
 	}
+
+	//testing
+	bool isNear(const double p[3])
+	{
+		if (vtkMath::Distance2BetweenPoints(p, m_Point) < 0.1001f)
+			return true;
+		return false;
+	}
+
 };
 
 /// Class to handle a directed/undirected graph using an adjacency list.
@@ -137,7 +146,23 @@ public:
 	//return the ID closer to the point (x,y,z) inside the graph (if exists)
 	int getID(double x, double y, double z) 
 	{
-		
+		for (int i = 0; i < m_vGraphVertexes.size(); i++) 
+		{
+			double p[3] = { x, y, z };
+			if (m_vGraphVertexes[i].isNear(p))
+				return m_vGraphVertexes[i].getIndex();
+		}
+		return -1;
+		//auto it = m_vGraphVertexes.begin();
+		//
+		//while (it != m_vGraphVertexes.end())
+		//{
+		//	double p[3] = {x, y, z};
+		//	if (it->isNear(p))
+		//		return it->getIndex();
+		//	it++;
+		//}
+		return -1;
 	}
 
 	CGraph();

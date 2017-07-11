@@ -103,8 +103,10 @@ public:
 		vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkRenderWindowInteractor::SafeDownCast(caller);
 		double* p = interactor->GetPicker()->GetPickPosition();
 		cout << p[0] << " " << p[1] << " " << p[2] << endl;	//x, y, z
+		//cout << interactor->GetPicker()->GetSelectionPoint( << endl;
 		//find the point inside the graph and print the ID
-		//auto iIter = graph.begin();
+		int index = graph.getID(p[0], p[1], p[2]);
+		cout << index << endl;
 		//const auto iEnd = m_vGraphVertexes.end();	//to indicate the end
 	}
 
@@ -179,11 +181,10 @@ int main(int argc, char *argv[])
 	// Add a data node
 	//ds->Add(pointResult);
 	std::cout << "Status: Adding surfaces from Graph ..." << endl;
-	
+	navigation.computePath(4646);
 	ds->Add(navigation.getDrawablePoints());
-	//ds->Add(navigation.getDrawableLines());
-	navigation.computePath();
-	ds->Add(navigation.getDrawingPath(1, 135));
+	ds->Add(navigation.getDrawableLines());
+	ds->Add(navigation.getDrawingPath(4646, 27));
 	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
@@ -217,8 +218,8 @@ int main(int argc, char *argv[])
 	//qInteractor->SetInteractorStyle(style);
 	//renderWindow.GetInteractor()->setin
 	//testing
-	//mainData.shortestPath(0, 1);
-
+	//mainData.shortestPath(4776, 1);
+	
 	///////////////////////////////////////////
 	/////////				final part
 	//////////////////////////////////////////
