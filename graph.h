@@ -32,7 +32,7 @@ private:
 	std::set <std::pair<int, double>> m_vNeighbours;	//store a pair of values (id, distance) into a set
 	double m_Point[3];	//point 3D
 
-public:
+public:	//any of the constructor copy the neighbours
 	CGraphVertex()
 	{
 		m_Point[0] = m_Point[1] = m_Point[2] = 0;
@@ -113,6 +113,8 @@ private:
 	std::vector<CGraphVertex> m_vGraphVertexes;
 	vtkSmartPointer<vtkPoints> m_vtkPoints;
 	typedef std::pair<int, int> tEdge;	//to define an edge as the link between two nodes represented by their indexes
+	//a new graph using the MST (reduced from the original)
+	std::vector<CGraphVertex> m_vGraphMST;
 
 public:
 	void addGraphVertex(CGraphVertex v);
@@ -134,6 +136,8 @@ public:
 	// Find the shortest path from node to all nodex
 	std::vector<int> shortestPath(const int & indexI = 0);
 
+	std::vector<int> primtMST(int src = 0);
+
 	//print for testing
 	void print()
 	{
@@ -142,6 +146,8 @@ public:
 			std::cout << v.getIndex() << std::endl;
 		});
 	}
+
+	vtkSmartPointer<vtkPolyData> getMSTDataPath(std::vector<int> path);	//MST data
 
 	//return the ID in the graph closer to the point (x,y,z) inside the graph (if exists)
 	int getID(double x, double y, double z) 

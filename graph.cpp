@@ -1,5 +1,8 @@
 #include "graph.h"
 #include <assert.h>
+#include <algorithm>
+#include <queue>
+#include <vector>
 
 #define INF 0x3f3f3f3f
 
@@ -82,6 +85,27 @@ void CGraph::computeDistances(double epsilon )
 	 //	v.printNeighbours();
 	 //	//std::cout << v.getIndex() << std::endl;
 	 //});
+}
+
+vtkSmartPointer<vtkPolyData> CGraph::getMSTDataPath(std::vector<int> path) 
+{
+	assert(m_vGraphMST.size());	//it should exists first
+	assert(path.size());	// and path should exists
+
+	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+	polydata->Allocate();
+
+
+	//fill the polydata
+	for (int i = 1; i < path.size(); i++)
+	{
+		vtkIdType line[2] = { path[i - 1], path[i] };
+		polydata->InsertNextCell(VTK_LINE, 2, line);
+	}
+
+	//set the points info into the polydata
+	polydata->SetPoints(m_vtkPoints);
+	return polydata;
 }
 
 vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
@@ -251,4 +275,84 @@ std::vector<int> CGraph::shortestPath(const int & indexI)
 		}
 	}
 	return vEdges;
+}
+
+// iPair ==>  Integer Pair
+typedef std::pair<int, int> iPair;
+std::vector<int> CGraph::primtMST(int src)			// Taking vertex 0 as source
+{
+	// Create a priority queue to store vertices that
+	// are being preinMST. This is weird syntax in C++.
+	// Refer below link for details of this syntax
+	// http://geeksquiz.com/implement-min-heap-using-stl/
+	std::priority_queue< iPair, std::vector <iPair>, std::greater<iPair> > pq;
+
+	// Create a vector for keys and initialize all
+	// keys as infinite (INF)
+	std::vector<int> key(m_vGraphVertexes.size(), INF);
+
+	// To store parent array which in turn store MST
+	std::vector<int> parent(m_vGraphVertexes.size(), -1);
+
+	// To keep track of vertices included in MST
+	std::vector<bool> inMST(m_vGraphVertexes.size(), false);
+
+	// Insert source itself in priority queue and initialize
+	// its key as 0.
+	pq.push(std::make_pair(0, src));
+	key[src] = 0;
+
+	/* Looping till priority queue becomes empty */
+	while (!pq.empty())
+	{
+		// The first vertex in pair is the minimum key
+		// vertex, extract it from priority queue.
+		// vertex label is stored in second of pair (it
+		// has to be done this way to keep the vertices
+		// sorted key (key must be first item
+		// in pair)
+		int u = pq.top().second;
+		pq.pop();
+
+		inMST[u] = true;  // Include vertex in MST
+
+		// 'i' is used to get all adjacent vertices of a vertex
+		for (auto i = m_vGraphVertexes[u].getNeighbours().begin(); i != m_vGraphVertexes[u].getNeighbours().end(); ++i) 
+		{
+			// Get vertex label and weight of current adjacent
+			// of u.
+			int v = (*i).first;
+			int weight = (*i).second;
+			//  If v is not in MST and weight of (u,v) is smaller
+			// than current key of v
+			if (!inMST[v] && key[v] > weight)
+			{
+				// Updating key of v
+				key[v] = weight;
+				pq.push(std::make_pair(key[v], v));
+				parent[v] = u;
+			}
+		}
+	}
+
+	//reserve the space
+	m_vGraphMST.reserve(m_vGraphVertexes.size());
+	// Copy vertexes (IT IS NOT THE BEST WAY, IS JUST TESTING)
+	std::for_each(m_vGraphVertexes.begin(), m_vGraphVertexes.end(), [&](CGraphVertex & v)
+	{
+		CGraphVertex newVertex(v.getIndex(), v.get_ptr());
+		m_vGraphMST.push_back(newVertex);
+	});
+
+	//Copy edges of MST using parent array 
+	for (int i = 1; i < m_vGraphMST.size(); ++i)
+	{
+		if (parent[i] != -1) 
+		{
+			double d = vtkMath::Distance2BetweenPoints(m_vGraphVertexes[i].get_ptr(), m_vGraphVertexes[parent[i]].get_ptr());
+			m_vGraphMST[i].link(m_vGraphMST[parent[i]].getIndex(), d);
+			m_vGraphMST[parent[i]].link(m_vGraphMST[i].getIndex(), d);
+		}
+	}
+	return parent;
 }

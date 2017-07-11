@@ -25,6 +25,12 @@ void CNavigation::computePath(const int& index)
 	m_vPathParent = m_graph.shortestPath(index);
 }
 
+void CNavigation::computeMST(const int& index)
+{
+	cout << "Status: Computing MST path ..." << std::endl;
+	m_vPathMST = m_graph.primtMST(index);
+}
+
 bool CNavigation::pathInGraph(int source, int destination, std::vector<int>& path)
 {
 	if (m_vPathParent[destination] == -1)	//path does not exists
@@ -36,6 +42,39 @@ bool CNavigation::pathInGraph(int source, int destination, std::vector<int>& pat
 	bool r =  pathInGraph(source, m_vPathParent[destination], path);
 	path.push_back(destination);
 	return r;
+}
+
+bool CNavigation::pathInMST(int source, int destination, std::vector<int>& path) 
+{
+	if (m_vPathMST[destination] == -1)	//path does not exists
+		return false;
+	if (m_vPathMST[destination] == source)	//base case
+		return true;		//path found
+
+	path.push_back(destination);
+	bool r = pathInMST(source, m_vPathMST[destination], path);
+	return r;
+}
+
+mitk::DataNode::Pointer CNavigation::getMSTDrawingPath(const int & i, const int & j) 
+{
+	//compute the nodes involves in the path, starting from i and finished in j (included)
+	std::vector<int> path;
+	pathInMST(i, j, path);
+	// Create the MITK surface object
+	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
+	lines_surface->SetVtkPolyData(m_graph.getPolyDataPath(path));
+
+	// Create a new node in DataNode with properties
+	mitk::DataNode::Pointer result = mitk::DataNode::New();
+	result->SetColor(0.8, 0.8, 0.1);
+	std::string nameOfOuputImage = "path-MST";
+	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
+
+	lines_surface->Update();
+	result->SetData(lines_surface);
+	result->SetFloatProperty("material.wireframeLineWidth", 3);	//3 as width of the line
+	return result;
 }
 
 mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j)
