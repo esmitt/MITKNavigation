@@ -41,13 +41,82 @@ See LICENSE.txt or http://www.mitk.org for details.
 //	iren->Render();
 //}
 
+#include <vtkSmartPointer.h>
+#include <vtkRendererCollection.h>
+#include <vtkWorldPointPicker.h>
+#include <vtkSphereSource.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkActor.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkObjectFactory.h>
+#include <vtkPointPicker.h>
+//class MouseInteractorStyle : public vtkInteractorStyleTrackballCamera
+////class MouseInteractorStyle : public vtkLeftCLiking
+//{
+//public:
+//	static MouseInteractorStyle* New();
+//	vtkTypeMacro(MouseInteractorStyle, vtkLeftCLiking);
+//
+//	virtual void OnLeftButtonDown()
+//	{
+//
+//		std::cout << "Picking pixel: " << this->Interactor->GetEventPosition()[0] << " " << this->Interactor->GetEventPosition()[1] << std::endl;
+//		this->Interactor->GetPicker()->Pick(this->Interactor->GetEventPosition()[0],
+//			this->Interactor->GetEventPosition()[1],
+//			0,  // always zero.
+//			this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+//		double picked[3];
+//		this->Interactor->GetPicker()->GetPickPosition(picked);
+//		std::cout << "Picked value: " << picked[0] << " " << picked[1] << " " << picked[2] << std::endl;
+//		// Forward events
+//		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+//	}
+//
+//};
+//vtkStandardNewMacro(MouseInteractorStyle);
+
+
+class vtkLeftCLiking : public vtkCommand
+//class vtkLeftCLiking : public vtkInteractorStyleTrackballCamera
+{
+	//attributes
+private:
+public:
+	CGraph graph;
+
+public:
+
+	// Important!
+	static vtkLeftCLiking *New() 
+	{
+		vtkLeftCLiking *pCallBack = new vtkLeftCLiking;
+		return pCallBack;
+	}
+
+
+	// Function that execute the main code of the Command
+	virtual void Execute(vtkObject *caller, unsigned long eventId, void * vtkNotUsed(callData)) 
+	{		
+		vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkRenderWindowInteractor::SafeDownCast(caller);
+		double* p = interactor->GetPicker()->GetPickPosition();
+		cout << p[0] << " " << p[1] << " " << p[2] << endl;	//x, y, z
+		//find the point inside the graph and print the ID
+		//auto iIter = graph.begin();
+		//const auto iEnd = m_vGraphVertexes.end();	//to indicate the end
+	}
+
+};
+
 //##Documentation
 //## @brief Load image (nrrd format) and display it in a 2D view
 int main(int argc, char *argv[])
 {
 	QApplication qtapplication(argc, argv);
 	CNavigation navigation;
-
+	
 	// Register Qmitk-dependent global instances
 	QmitkRegisterClasses();
 
@@ -123,6 +192,30 @@ int main(int argc, char *argv[])
 	//tCBInstance->setPath(polydata);
 	qInteractor->AddObserver(vtkCommand::TimerEvent, tCBInstance);
 
+	//vtkSmartPointer<vtkRenderWindow> renderWindow2 =	vtkSmartPointer<vtkRenderWindow>::New();
+	//renderWindow2->AddRenderer(rendered->GetVtkRenderer());
+	//vtkSmartPointer<vtkWorldPointPicker> worldPointPicker = vtkSmartPointer<vtkWorldPointPicker>::New();
+	//vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	//renderWindowInteractor->SetPicker(worldPointPicker);
+	//renderWindowInteractor->SetRenderWindow(renderWindow2);
+	//vtkSmartPointer<MouseInteractorStyle> style =	vtkSmartPointer<MouseInteractorStyle>::New();
+	//renderWindowInteractor->SetInteractorStyle(style);
+	//renderWindowInteractor->Start();
+	//vtkSmartPointer<vtkWorldPointPicker> worldPointPicker =	vtkSmartPointer<vtkWorldPointPicker>::New();
+	//vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = renderWindow.GetInteractor();
+	
+	//vtkSmartPointer<MouseInteractorStyle> style =	vtkSmartPointer<MouseInteractorStyle>::New();
+	////qInteractor->inter
+	////renderWindowInteractor->SetPicker(worldPointPicker);
+	////renderWindowInteractor->SetInteractorStyle(style);
+	vtkSmartPointer<vtkLeftCLiking> lctCBInstance = vtkSmartPointer<vtkLeftCLiking>::New();
+	//qInteractor->AddObserver(vtkCommand::InteractionEvent, lctCBInstance);
+	/////qInteractor->AddObserver(vtkCommand::InteractionEvent, lctCBInstance);
+	//qInteractor->AddObserver(vtkCommand::ActiveCameraEvent, lctCBInstance);
+	lctCBInstance->graph = navigation.getGraph();
+	qInteractor->AddObserver(vtkCommand::LeftButtonPressEvent, lctCBInstance);
+	//qInteractor->SetInteractorStyle(style);
+	//renderWindow.GetInteractor()->setin
 	//testing
 	//mainData.shortestPath(0, 1);
 

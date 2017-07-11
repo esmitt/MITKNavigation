@@ -134,8 +134,15 @@ public:
 		});
 	}
 
+	//return the ID closer to the point (x,y,z) inside the graph (if exists)
+	int getID(double x, double y, double z) 
+	{
+		
+	}
+
 	CGraph();
 	~CGraph();
+	
 };
 
 //std::vector<Vertex>::iterator findVertexIndex(double* val, bool& res)
