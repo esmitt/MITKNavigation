@@ -146,7 +146,7 @@ public:
 	//return the ID in the graph closer to the point (x,y,z) inside the graph (if exists)
 	int getID(double x, double y, double z) 
 	{
-		for (int i = 0; i < m_vGraphVertexes.size(); i++) 
+		for (size_t i = 0; i < m_vGraphVertexes.size(); i++) 
 		{
 			double p[3] = { x, y, z };
 			if (m_vGraphVertexes[i].isNear(p))
