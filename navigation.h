@@ -32,5 +32,5 @@ public:
 	mitk::DataNode::Pointer getDrawableLines() { return m_graph.getDrawableLines(); }
 	
 	//testing
-	CGraph getGraph() { return m_graph; }
+	CGraph* getGraph() { return &m_graph; }
 };

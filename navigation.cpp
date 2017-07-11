@@ -52,7 +52,7 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 		return nullptr;
 	}
 	
-	std::for_each(path.begin(), path.end(), [](int i) {cout << i << " "; });
+	//std::for_each(path.begin(), path.end(), [](int i) {cout << i << " "; });	//debug path
 
 	// Create the MITK surface object
 	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
@@ -66,7 +66,6 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 	
 	lines_surface->Update();
 	result->SetData(lines_surface);
-	float width = 3;
-	result->SetFloatProperty("material.wireframeLineWidth", width);
+	result->SetFloatProperty("material.wireframeLineWidth", 3);	//3 as width of the line
 	return result;
 }

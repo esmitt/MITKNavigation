@@ -143,7 +143,7 @@ public:
 		});
 	}
 
-	//return the ID closer to the point (x,y,z) inside the graph (if exists)
+	//return the ID in the graph closer to the point (x,y,z) inside the graph (if exists)
 	int getID(double x, double y, double z) 
 	{
 		for (int i = 0; i < m_vGraphVertexes.size(); i++) 
@@ -153,67 +153,9 @@ public:
 				return m_vGraphVertexes[i].getIndex();
 		}
 		return -1;
-		//auto it = m_vGraphVertexes.begin();
-		//
-		//while (it != m_vGraphVertexes.end())
-		//{
-		//	double p[3] = {x, y, z};
-		//	if (it->isNear(p))
-		//		return it->getIndex();
-		//	it++;
-		//}
-		return -1;
 	}
 
 	CGraph();
 	~CGraph();
 	
 };
-
-//std::vector<Vertex>::iterator findVertexIndex(double* val, bool& res)
-//{
-//	std::vector<Vertex>::iterator it;
-//	Vertex v(val);
-//	it = std::find(m_vVertexes.begin(), m_vVertexes.end(), v);
-//	if (it != m_vVertexes.end()) {
-//		res = true;
-//		return it;
-//	}
-//	else {
-//		res = false;
-//		return m_vVertexes.end();
-//	}
-//}
-
-//void addEdge(int n1, int n2)
-//{
-//	bool foundNet1 = false, foundNet2 = false;
-//	auto vit1 = findVertexIndex(n1, foundNet1);
-//	int node1Index = -1, node2Index = -1;
-//	if (!foundNet1)
-//	{
-//		Vertex v1(n1);
-//		m_vVertexes.push_back(v1);
-//		node1Index = m_vVertexes.size() - 1;
-//	}
-//	else
-//	{
-//		node1Index = vit1 - m_vVertexes.begin();
-//	}
-//	Vertices::iterator vit2 = findVertexIndex(n2, foundNet2);
-//	if (!foundNet2)
-//	{
-//		Vertex v2(n2);
-//		m_vVertexes.push_back(v2);
-//		node2Index = m_vVertexes.size() - 1;
-//	}
-//	else
-//	{
-//		node2Index = vit2 - vertices.begin();
-//	}
-
-//	assert((node1Index > -1) && (node1Index <  vertices.size()));
-//	assert((node2Index > -1) && (node2Index <  vertices.size()));
-
-//	addEdgeIndices(node1Index, node2Index);
-//}

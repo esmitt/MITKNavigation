@@ -155,23 +155,6 @@ mitk::DataNode::Pointer CGraph::getDrawablePoints()
 	vtkSmartPointer<vtkPolyData> pointsPolydata = vtkSmartPointer<vtkPolyData>::New();
 	pointsPolydata->SetPoints(m_vtkPoints);
 
-
-	//vtkSmartPointer<vtkPointSource> pointSource =
-	//	vtkSmartPointer<vtkPointSource>::New();
-	//pointSource->SetCenter(0.0, 0.0, 0.0);
-	//pointSource->SetNumberOfPoints(500);
-	//pointSource->SetRadius(500.0);
-	//pointSource->Update();
-
-	vtkSmartPointer<vtkLabeledDataMapper> labelMapper =	vtkSmartPointer<vtkLabeledDataMapper>::New();
-	//labelMapper->SetInputData(pointSource->GetOutput());
-	//labelMapper->SetInputData(pointsPolydata);
-	labelMapper->SetInputData(pointsPolydata);
-//	labelMapper->SetInputConnection(pointsPolydata->GetCellData());
-	labelMapper->Update();
-
-	//labelMapper->SetInputConnection(pointsPolydata);
-
 	vtkSmartPointer<vtkGlyph3D> glyph3D = vtkSmartPointer<vtkGlyph3D>::New();
 	vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
 	sphereSource->SetRadius(0.1f);
@@ -179,13 +162,8 @@ mitk::DataNode::Pointer CGraph::getDrawablePoints()
 	glyph3D->SetSourceConnection(sphereSource->GetOutputPort());
 	glyph3D->SetInputData(pointsPolydata);
 	glyph3D->GeneratePointIdsOn();
-	//glyph3D->SetInputConnection(labelMapper->GetOutputPort());
 	glyph3D->Update();
 	
-
-	
-	//renderWindowInteractor->SetRenderWindow(renderWindow);
-
 	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 	polydata->ShallowCopy(glyph3D->GetOutput());
 
@@ -272,14 +250,5 @@ std::vector<int> CGraph::shortestPath(const int & indexI)
 			}
 		}
 	}
-	// get path in order
-
-	//int parent = vEdges[3136];
-	//while (parent != -1) 
-	//{
-	//	cout << parent << " ";
-	//	parent = vEdges[parent];
-	//}
-
 	return vEdges;
 }
