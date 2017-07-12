@@ -108,6 +108,26 @@ vtkSmartPointer<vtkPolyData> CGraph::getMSTDataPath(std::vector<int> path)
 	return polydata;
 }
 
+vtkSmartPointer<vtkPolyData> CGraph::getPolyMSTComplete(std::vector<int> path) 
+{
+	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
+	polydata->Allocate();
+
+	// fill the polydata
+	for (int i = 1; i < path.size(); i++)
+	{
+		if (path[i] != -1) 
+		{
+			vtkIdType line[2] = { i, path[i] };
+			polydata->InsertNextCell(VTK_LINE, 2, line);
+		}
+	}
+
+	//set the points info into the polydata
+	polydata->SetPoints(m_vtkPoints);
+	return polydata;
+}
+
 vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
 {
 	assert(m_vGraphVertexes.size());	//it should exists first

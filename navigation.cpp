@@ -44,18 +44,35 @@ bool CNavigation::pathInGraph(int source, int destination, std::vector<int>& pat
 	return r;
 }
 
-bool CNavigation::pathInMST(int source, int destination, std::vector<int>& path) 
+void CNavigation::pathInMST(int source, int destination, std::vector<int>& path) 
 {
-	if (m_vPathMST[destination] == -1)	//path does not exists
-		return false;
-	if (m_vPathMST[destination] == source)	//base case
-		return true;		//path found
-
-	path.push_back(destination);
-	bool r = pathInMST(source, m_vPathMST[destination], path);
-	return r;
+	if (m_vPathMST[destination] != -1)	//no parent
+	{
+		if (m_vPathMST[destination] != source)	//base case
+		{
+			path.push_back(destination);
+			pathInMST(source, m_vPathMST[destination], path);
+		}
+	}
 }
 
+mitk::DataNode::Pointer CNavigation::getMSTDrawingPath()
+{
+	// Create the MITK surface object
+	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
+	lines_surface->SetVtkPolyData(m_graph.getPolyMSTComplete(m_vPathMST));
+
+	// Create a new node in DataNode with properties
+	mitk::DataNode::Pointer result = mitk::DataNode::New();
+	result->SetColor(0, 0.56, 1);
+	std::string nameOfOuputImage = "complete-path-MST";
+	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
+
+	lines_surface->Update();
+	result->SetData(lines_surface);
+	result->SetFloatProperty("material.wireframeLineWidth", 3);	//3 as width of the line
+	return result;
+}
 mitk::DataNode::Pointer CNavigation::getMSTDrawingPath(const int & i, const int & j) 
 {
 	//compute the nodes involves in the path, starting from i and finished in j (included)
@@ -63,11 +80,11 @@ mitk::DataNode::Pointer CNavigation::getMSTDrawingPath(const int & i, const int 
 	pathInMST(i, j, path);
 	// Create the MITK surface object
 	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
-	lines_surface->SetVtkPolyData(m_graph.getPolyDataPath(path));
+	lines_surface->SetVtkPolyData(m_graph.getMSTDataPath(path));
 
 	// Create a new node in DataNode with properties
 	mitk::DataNode::Pointer result = mitk::DataNode::New();
-	result->SetColor(0.8, 0.8, 0.1);
+	result->SetColor(1, 0.56, 0);
 	std::string nameOfOuputImage = "path-MST";
 	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
 
@@ -99,7 +116,8 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 
 	// Create a new node in DataNode with properties
 	mitk::DataNode::Pointer result = mitk::DataNode::New();
-	result->SetColor(0.1, 0.6, 0.9);
+	//result->SetColor(0.1, 0.6, 0.9);
+	result->SetColor(1.0, 0.6, 0.9);
 	std::string nameOfOuputImage = "path";
 	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
 	

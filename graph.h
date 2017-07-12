@@ -148,6 +148,7 @@ public:
 	}
 
 	vtkSmartPointer<vtkPolyData> getMSTDataPath(std::vector<int> path);	//MST data
+	vtkSmartPointer<vtkPolyData> getPolyMSTComplete(std::vector<int> path); // MST data
 
 	//return the ID in the graph closer to the point (x,y,z) inside the graph (if exists)
 	int getID(double x, double y, double z) 

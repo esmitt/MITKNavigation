@@ -15,7 +15,7 @@ private:
 
 protected:
 	bool pathInGraph(int source, int destination, std::vector<int>& path);
-	bool pathInMST(int source, int destination, std::vector<int>& path);
+	void pathInMST(int source, int destination, std::vector<int>& path);
 
 public:
 	CNavigation();
@@ -32,6 +32,7 @@ public:
 	// Return the datanode which contains the path between node i and node j
 	mitk::DataNode::Pointer getDrawingPath(const int & i, const int & j);
 	mitk::DataNode::Pointer getMSTDrawingPath(const int & i, const int & j);
+	mitk::DataNode::Pointer getMSTDrawingPath();
 
 	mitk::DataNode::Pointer getDrawablePoints() { return m_graph.getDrawablePoints(); }
 	mitk::DataNode::Pointer getDrawableLines() { return m_graph.getDrawableLines(); }

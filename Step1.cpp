@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	std::cout << "Status: Reading the OBJ file ..." << endl;
-	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
 	std::cout << "Status: Reading the MAT file ..." << endl;
 	if(!navigation.openMATFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
 		return EXIT_FAILURE;
@@ -148,18 +148,21 @@ int main(int argc, char *argv[])
 	qInteractor->SetRenderWindow(renderWindow.GetRenderWindow());
 	int timerId = qInteractor->CreateRepeatingTimer(1000);
 
-	// Add a data node
+	// Add a data node 
 	std::cout << "Status: Adding surfaces from Graph ..." << endl;
 	navigation.computePath(4646);	//starting node just for convenience 
 	navigation.computeMST(4646);
+	ds->Add(navigation.getMSTDrawingPath());
 	ds->Add(navigation.getDrawablePoints());
 	//ds->Add(navigation.getDrawableLines());
 	std::cout << "Status: Computing Prim algorithm ..." << endl;
 	//navigation.getGraph()->primtMST(4646);
-	ds->Add(navigation.getMSTDrawingPath(4646, 3445));
+	//ds->Add(navigation.getMSTDrawingPath(4646, 3445));
+	ds->Add(navigation.getDrawableLines());
 	//ds->Add(navigation.getDrawingPath(4646, 27));	//ending point 27 (for testing)
 	//ds->Add(navigation.getDrawingPath(4646, 4390));
-	ds->Add(navigation.getDrawingPath(4646, 3445));
+	//ds->Add(navigation.getDrawingPath(4646, 3445));
+	
 	ds->Print(cout);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
