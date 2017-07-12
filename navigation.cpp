@@ -21,7 +21,7 @@ bool CNavigation::openMATFile(const std::string & strFilename)
 
 void CNavigation::computePath(const int& index)
 {
-	cout << "Status: Computing the shortest distance between all nodes ..." << std::endl;
+	cout << "Status: Computing the shortest distance from node " << index << " ..." << std::endl;
 	m_vPathParent = m_graph.shortestPath(index);
 }
 

@@ -60,7 +60,9 @@ class vtkLeftCLiking : public vtkCommand
 private:
 public:
 	CGraph* graph;
-
+	//mitk::StandaloneDataStorage::Pointer ds;
+	CNavigation* navigation;
+	QmitkRenderWindow* renderWindow;
 public:
 
 	// Important!
@@ -74,11 +76,29 @@ public:
 	virtual void Execute(vtkObject *caller, unsigned long eventId, void * vtkNotUsed(callData)) 
 	{		
 		vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkRenderWindowInteractor::SafeDownCast(caller);
-		double* p = interactor->GetPicker()->GetPickPosition();
+		if (interactor == nullptr) return;
+
+		auto pick = interactor->GetPicker();
+		if (pick->GetPickList() == nullptr) return;
+
+		double* p = pick->GetPickPosition();
 		cout << p[0] << " " << p[1] << " " << p[2] << endl;	//x, y, z
 		//find the point inside the graph and print the ID
 		int index = graph->getID(p[0], p[1], p[2]);
 		cout << index << endl;
+		if (index >= 0 && navigation != nullptr && p[0] != 0)
+		{
+			mitk::BaseRenderer::Pointer rendered = mitk::BaseRenderer::GetInstance(renderWindow->GetVtkRenderWindow());
+			auto tit = rendered->GetDataStorage();
+			if (tit != nullptr)
+			{
+				tit->Remove(tit->GetNamedNode("path"));
+				tit->Add(navigation->getDrawingPath(98, index));
+			}
+			//if(ds->GetNamedNode("path"))
+			//	ds->Remove(ds->GetNamedNode("path"));
+			//ds->Add(navigation->getDrawingPath(98, index));
+		}
 	}
 };
 
@@ -148,26 +168,6 @@ int main(int argc, char *argv[])
 	qInteractor->SetRenderWindow(renderWindow.GetRenderWindow());
 	int timerId = qInteractor->CreateRepeatingTimer(1000);
 
-	// Add a data node 
-	std::cout << "Status: Adding surfaces from Graph ..." << endl;
-	navigation.computePath(4646);	//starting node just for convenience 
-	navigation.computeMST(4646);
-	ds->Add(navigation.getMSTDrawingPath());
-	ds->Add(navigation.getDrawablePoints());
-	ds->Add(navigation.getDrawingPath(4646, 3445));
-	//ds->Add(navigation.getDrawableLines());
-	std::cout << "Status: Computing Prim algorithm ..." << endl;
-	//std::cout << "Status: Computing Prim algorithm ..." << endl;
-	//navigation.getGraph()->primtMST(4646);
-	//ds->Add(navigation.getMSTDrawingPath(4646, 3445));
-	ds->Add(navigation.getDrawableLines());
-	//ds->Add(navigation.getDrawableLines());
-	//ds->Add(navigation.getDrawingPath(4646, 27));	//ending point 27 (for testing)
-	//ds->Add(navigation.getDrawingPath(4646, 4390));
-	//ds->Add(navigation.getDrawingPath(4646, 3445));
-	
-	ds->Print(cout);
-
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
 	vtkSmartPointer<vtkTimerUser> tCBInstance = vtkSmartPointer<vtkTimerUser>::New();
 	tCBInstance->m_vtkCamera = tCamera;
@@ -176,7 +176,25 @@ int main(int argc, char *argv[])
 	vtkSmartPointer<vtkLeftCLiking> lctCBInstance = vtkSmartPointer<vtkLeftCLiking>::New();
 	lctCBInstance->graph = navigation.getGraph();	//just to select a point
 	qInteractor->AddObserver(vtkCommand::LeftButtonPressEvent, lctCBInstance);
-	
+
+	//just for testing
+	lctCBInstance->navigation = &navigation;
+	//lctCBInstance->ds = ds;
+	lctCBInstance->renderWindow = &renderWindow;
+
+	// Add a data node 
+	std::cout << "Status: Adding surfaces from Graph ..." << endl;
+	navigation.computePath(98);	//starting node just for convenience 
+	//navigation.computeMST(4646);
+	//ds->Add(navigation.getMSTDrawingPath());
+	ds->Add(navigation.getDrawablePoints());
+	//ds->Add(navigation.getDrawingPath(98, 2934)); //
+	//ds->Add(navigation.getDrawableLines());
+	//std::cout << "Status: Computing Prim algorithm ..." << endl;
+	//std::cout << "Status: Computing Prim algorithm ..." << endl;
+	//navigation.getGraph()->primtMST(4646);
+	ds->Print(cout);
+
 	///////////////////////////////////////////
 	/////////				final part
 	//////////////////////////////////////////
