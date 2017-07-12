@@ -154,11 +154,14 @@ int main(int argc, char *argv[])
 	navigation.computeMST(4646);
 	ds->Add(navigation.getMSTDrawingPath());
 	ds->Add(navigation.getDrawablePoints());
+	ds->Add(navigation.getDrawingPath(4646, 3445));
 	//ds->Add(navigation.getDrawableLines());
 	std::cout << "Status: Computing Prim algorithm ..." << endl;
+	//std::cout << "Status: Computing Prim algorithm ..." << endl;
 	//navigation.getGraph()->primtMST(4646);
 	//ds->Add(navigation.getMSTDrawingPath(4646, 3445));
 	ds->Add(navigation.getDrawableLines());
+	//ds->Add(navigation.getDrawableLines());
 	//ds->Add(navigation.getDrawingPath(4646, 27));	//ending point 27 (for testing)
 	//ds->Add(navigation.getDrawingPath(4646, 4390));
 	//ds->Add(navigation.getDrawingPath(4646, 3445));
