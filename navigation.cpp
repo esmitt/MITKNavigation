@@ -94,7 +94,46 @@ mitk::DataNode::Pointer CNavigation::getMSTDrawingPath(const int & i, const int 
 	return result;
 }
 
-mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j)
+mitk::DataNode::Pointer CNavigation::getSmoothDrawingPath(const int & i, const int & j, std::string name)
+{
+	//compute the nodes involves in the path, starting from i and finished in j (included)
+	std::vector<int> path;
+	if (pathInGraph(i, j, path))
+		path.insert(path.begin(), i);	//insert the first one at the top, to complete the path
+	else
+	{
+		cout << "There is no a path between " << i << " and " << j << endl;
+		return nullptr;
+	}
+	// Create the MITK surface object
+	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
+
+	// spline object
+	vtkSmartPointer<vtkParametricSpline> spline =	vtkSmartPointer<vtkParametricSpline>::New();
+	spline->SetPoints(m_graph.getPointsPath(path));	//get the points in the dijsktra's path
+
+	// function source
+	vtkSmartPointer<vtkParametricFunctionSource> functionSource =	vtkSmartPointer<vtkParametricFunctionSource>::New();
+	functionSource->SetParametricFunction(spline);
+	functionSource->Update();
+
+	//the smooth output to follow
+	auto smoothPath = functionSource->GetOutput();	//this is the smooth path to extract the points to follow a path with camera
+	lines_surface->SetVtkPolyData(smoothPath);
+
+	// Create a new node in DataNode with properties
+	mitk::DataNode::Pointer result = mitk::DataNode::New();
+	result->SetColor(0.3, 0.3, 0.8);
+	result->SetProperty("name", mitk::StringProperty::New(name));
+
+	lines_surface->Update();
+	result->SetData(lines_surface);
+	result->SetFloatProperty("material.wireframeLineWidth", 3);	//3 as width of the line
+	return result;
+
+}
+
+mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j, std::string name)
 {
 	assert(m_vPathParent.size());	//the computePath should be invoked first
 
@@ -118,8 +157,7 @@ mitk::DataNode::Pointer CNavigation::getDrawingPath(const int & i, const int & j
 	mitk::DataNode::Pointer result = mitk::DataNode::New();
 	//result->SetColor(0.1, 0.6, 0.9);
 	result->SetColor(1.0, 0.6, 0.9);
-	std::string nameOfOuputImage = "path";
-	result->SetProperty("name", mitk::StringProperty::New(nameOfOuputImage));
+	result->SetProperty("name", mitk::StringProperty::New(name));
 	
 	lines_surface->Update();
 	result->SetData(lines_surface);

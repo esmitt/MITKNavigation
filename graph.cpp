@@ -136,7 +136,6 @@ vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
 	vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
 	polydata->Allocate();
 	
-
 	//fill the polydata
 	for (int i = 1; i < path.size(); i++) 
 	{
@@ -147,6 +146,28 @@ vtkSmartPointer<vtkPolyData> CGraph::getPolyDataPath(std::vector<int> path)
 	//set the points info into the polydata
 	polydata->SetPoints(m_vtkPoints);
 	return polydata;
+}
+
+vtkSmartPointer<vtkPoints> CGraph::getPointsPath(std::vector<int> path)
+{
+	assert(m_vGraphVertexes.size());	//it should exists first
+	assert(path.size());	// and path should exists
+
+	vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+
+	//copy point in the path only, others are ignored
+
+	//std::for_each(path.begin(), path.end(), [&points, m_vtkPoints](const int & index) {
+	//	points->InsertNextPoint(m_vtkPoints->GetPoint(index));
+	//});
+	auto it = path.begin();
+	while (it != path.end())
+	{
+		points->InsertNextPoint(m_vtkPoints->GetPoint(*it));
+		it++;
+	}
+
+	return points;
 }
 
 /// Function which creates a Surface (MITK) and associate all internal data on it. 

@@ -120,12 +120,15 @@ public:
 	void addGraphVertex(CGraphVertex v);
 	void constructVTKPoints();
 	void addEdgeIndex(int index1, int index2);
-	
+
 	// Get the polydata associated with the path in the vector
 	vtkSmartPointer<vtkPolyData> getPolyDataPath(std::vector<int> path);
 
+	// Get the points  associated with the path in the vector
+	vtkSmartPointer<vtkPoints> getPointsPath(std::vector<int> path);
+
 	// Compute the euclidean distance between all pair of nodes nodes/vertexes
-	void computeDistances(double epsilon = CUtility::getInstance()->RADIUS_DISTANCE);	
+	void computeDistances(double epsilon = CUtility::getInstance()->RADIUS_DISTANCE);
 
 	// Return a MITK node to be added into the drawing pipeline
 	mitk::DataNode::Pointer getDrawableLines();
@@ -151,15 +154,20 @@ public:
 	vtkSmartPointer<vtkPolyData> getPolyMSTComplete(std::vector<int> path); // MST data
 
 	//return the ID in the graph closer to the point (x,y,z) inside the graph (if exists)
-	int getID(double x, double y, double z) 
+	int getID(double x, double y, double z)
 	{
-		for (size_t i = 0; i < m_vGraphVertexes.size(); i++) 
+		for (size_t i = 0; i < m_vGraphVertexes.size(); i++)
 		{
 			double p[3] = { x, y, z };
 			if (m_vGraphVertexes[i].isNear(p))
 				return m_vGraphVertexes[i].getIndex();
 		}
 		return -1;
+	}
+	
+	vtkSmartPointer<vtkPoints> getPoints()
+	{
+		return m_vtkPoints;
 	}
 
 	CGraph();

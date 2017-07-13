@@ -63,6 +63,7 @@ public:
 	//mitk::StandaloneDataStorage::Pointer ds;
 	CNavigation* navigation;
 	QmitkRenderWindow* renderWindow;
+	int counter = 0;
 public:
 
 	// Important!
@@ -73,6 +74,7 @@ public:
 	}
 
 	// Function that execute the main code of the Command
+	// NOW IS A MESS! IS JUST FOR TESTING
 	virtual void Execute(vtkObject *caller, unsigned long eventId, void * vtkNotUsed(callData)) 
 	{		
 		vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkRenderWindowInteractor::SafeDownCast(caller);
@@ -92,8 +94,26 @@ public:
 			auto tit = rendered->GetDataStorage();
 			if (tit != nullptr)
 			{
-				tit->Remove(tit->GetNamedNode("path"));
-				tit->Add(navigation->getDrawingPath(98, index));
+				char path2[100];
+				sprintf(path2, "path-%d", (counter-1));
+				auto all = tit->GetAll();
+				auto stlcon = all->CastToSTLConstContainer();
+				std::for_each(stlcon.begin(), stlcon.end(), [](itk::SmartPointer<mitk::DataNode> o) 
+				{
+					cout << o->GetName() << endl;
+				});
+
+				mitk::DataNode* ds = tit->GetNamedNode(std::string(path2));
+
+				if(ds != nullptr)
+					tit->Remove(ds);
+				
+				char path[100];
+				sprintf(path, "path-%d", counter);
+				tit->Add(navigation->getDrawingPath(98, index, std::string(path)));
+				counter++;
+				tit->Add(navigation->getSmoothDrawingPath(98, index, std::string(path)));
+				counter++;
 			}
 			//if(ds->GetNamedNode("path"))
 			//	ds->Remove(ds->GetNamedNode("path"));
