@@ -23,7 +23,7 @@ private:
 	CGraph m_graph;
 	std::vector<int> m_vPathParent;
 	std::vector<int> m_vPathMST;
-
+	vtkSmartPointer<vtkPolyData> m_vPathSmooth;
 protected:
 	bool pathInGraph(int source, int destination, std::vector<int>& path);
 	void pathInMST(int source, int destination, std::vector<int>& path);
@@ -42,8 +42,10 @@ public:
 
 	// Return the datanode which contains the path between node i and node j
 	mitk::DataNode::Pointer getDrawingPath(const int & i, const int & j, std::string name);
+	
+	vtkSmartPointer<vtkPolyData> getSmoothPath(const int & i, const int &j);
 	// Return the datanode which contains the smooth path between node i and node j
-	mitk::DataNode::Pointer getSmoothDrawingPath(const int & i, const int & j, std::string name);
+	mitk::DataNode::Pointer getSmoothDrawingPath(const vtkSmartPointer<vtkPolyData> smoothPath, std::string name);
 
 	mitk::DataNode::Pointer getMSTDrawingPath(const int & i, const int & j);
 	mitk::DataNode::Pointer getMSTDrawingPath();

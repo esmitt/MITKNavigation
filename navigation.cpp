@@ -94,7 +94,7 @@ mitk::DataNode::Pointer CNavigation::getMSTDrawingPath(const int & i, const int 
 	return result;
 }
 
-mitk::DataNode::Pointer CNavigation::getSmoothDrawingPath(const int & i, const int & j, std::string name)
+vtkSmartPointer<vtkPolyData> CNavigation::getSmoothPath(const int & i, const int &j)
 {
 	//compute the nodes involves in the path, starting from i and finished in j (included)
 	std::vector<int> path;
@@ -105,21 +105,31 @@ mitk::DataNode::Pointer CNavigation::getSmoothDrawingPath(const int & i, const i
 		cout << "There is no a path between " << i << " and " << j << endl;
 		return nullptr;
 	}
-	// Create the MITK surface object
-	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
-
+	
 	// spline object
-	vtkSmartPointer<vtkParametricSpline> spline =	vtkSmartPointer<vtkParametricSpline>::New();
+	vtkSmartPointer<vtkParametricSpline> spline = vtkSmartPointer<vtkParametricSpline>::New();
 	spline->SetPoints(m_graph.getPointsPath(path));	//get the points in the dijsktra's path
 
 	// function source
-	vtkSmartPointer<vtkParametricFunctionSource> functionSource =	vtkSmartPointer<vtkParametricFunctionSource>::New();
+	vtkSmartPointer<vtkParametricFunctionSource> functionSource = vtkSmartPointer<vtkParametricFunctionSource>::New();
 	functionSource->SetParametricFunction(spline);
 	functionSource->Update();
 
 	//the smooth output to follow
-	auto smoothPath = functionSource->GetOutput();	//this is the smooth path to extract the points to follow a path with camera
-	lines_surface->SetVtkPolyData(smoothPath);
+	vtkSmartPointer<vtkPolyData> smoothPath = vtkSmartPointer<vtkPolyData>::New();
+	//smoothPath.TakeReference(functionSource->GetOutput());	//this is the smooth path to extract the points to follow a path with camera
+	//smoothPath.TakeReference(functionSource->GetOutput()->New());
+	//smoothPath = functionSource->GetOutput();
+	smoothPath->CopyStructure(functionSource->GetOutput());
+	return smoothPath;
+}
+
+mitk::DataNode::Pointer CNavigation::getSmoothDrawingPath(vtkSmartPointer<vtkPolyData> path, std::string name)
+{
+	
+	// Create the MITK surface object
+	mitk::Surface::Pointer lines_surface = mitk::Surface::New();
+	lines_surface->SetVtkPolyData(path);
 
 	// Create a new node in DataNode with properties
 	mitk::DataNode::Pointer result = mitk::DataNode::New();

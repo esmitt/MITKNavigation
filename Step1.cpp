@@ -63,6 +63,7 @@ public:
 	//mitk::StandaloneDataStorage::Pointer ds;
 	CNavigation* navigation;
 	QmitkRenderWindow* renderWindow;
+	vtkSmartPointer<vtkTimerUser> lctCBInstance;
 	int counter = 0;
 public:
 
@@ -112,7 +113,13 @@ public:
 				sprintf(path, "path-%d", counter);
 				tit->Add(navigation->getDrawingPath(98, index, std::string(path)));
 				counter++;
-				tit->Add(navigation->getSmoothDrawingPath(98, index, std::string(path)));
+				vtkSmartPointer<vtkPolyData> smoothPath;
+				smoothPath = navigation->getSmoothPath(98, index);
+				if(smoothPath != nullptr)
+				{
+					tit->Add(navigation->getSmoothDrawingPath(smoothPath, std::string(path)));
+					lctCBInstance->setPath(smoothPath->GetPoints());
+				}
 				counter++;
 			}
 			//if(ds->GetNamedNode("path"))
@@ -140,7 +147,7 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	std::cout << "Status: Reading the OBJ file ..." << endl;
-	//mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
 	std::cout << "Status: Reading the MAT file ..." << endl;
 	if(!navigation.openMATFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
 		return EXIT_FAILURE;
@@ -195,6 +202,9 @@ int main(int argc, char *argv[])
 
 	vtkSmartPointer<vtkLeftCLiking> lctCBInstance = vtkSmartPointer<vtkLeftCLiking>::New();
 	lctCBInstance->graph = navigation.getGraph();	//just to select a point
+	//auto thepath = lctCBInstance->smoothPath;
+	//tCBInstance->setPath(thepath);
+	lctCBInstance->lctCBInstance = tCBInstance;
 	qInteractor->AddObserver(vtkCommand::LeftButtonPressEvent, lctCBInstance);
 
 	//just for testing
