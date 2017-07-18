@@ -147,10 +147,17 @@ int main(int argc, char *argv[])
 
 	// Load datanode (eg. many image formats, surface formats, etc.)
 	std::cout << "Status: Reading the OBJ file ..." << endl;
-	mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
-	std::cout << "Status: Reading the MAT file ..." << endl;
-	if(!navigation.openMATFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
-		return EXIT_FAILURE;
+	try
+	{
+		mitk::IOUtil::Load("C:\\code\\bronchi labelling\\output.obj", *ds);
+		std::cout << "Status: Reading the MAT file ..." << endl;
+		if (!navigation.openMATFile("C:\\e\\Examples\\Tutorial\\Step1\\EXACTCase22_skel_graph.mat"))
+			return EXIT_FAILURE;
+	}
+	catch (mitk::Exception& e) 
+	{
+		cout << e.GetDescription() << endl;
+	}
 
 	// Create a RenderWindow
 	QmitkRenderWindow renderWindow;
