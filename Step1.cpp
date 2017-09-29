@@ -129,13 +129,18 @@ public:
 	}
 };
 
+//#include <vtkTesting.h>
+
 //##Documentation
 //## @brief Load image (nrrd format) and display it in a 2D view
 int main(int argc, char *argv[])
 {
 	QApplication qtapplication(argc, argv);
 	CNavigation navigation;
-	
+	//vtkSmartPointer<vtkTesting> testHelper =
+	//	vtkSmartPointer<vtkTesting>::New();
+	//std::string dataRoot = testHelper->GetDataRoot();
+
 	// Register Qmitk-dependent global instances
 	QmitkRegisterClasses();
 
@@ -200,7 +205,7 @@ int main(int argc, char *argv[])
 	//// Get the existing interactor from the GetInteractor() directly instead use GetVtkRenderWindowInteractor
 	vtkSmartPointer<QVTKInteractor> qInteractor = renderWindow.GetInteractor();
 	qInteractor->SetRenderWindow(renderWindow.GetRenderWindow());
-	int timerId = qInteractor->CreateRepeatingTimer(1000);
+	int timerId = qInteractor->CreateRepeatingTimer(5000);
 
 	// Instancing a class to handle the TimerEvent function, added as an Observer of renderWindow interactor
 	vtkSmartPointer<vtkTimerUser> tCBInstance = vtkSmartPointer<vtkTimerUser>::New();
@@ -225,8 +230,9 @@ int main(int argc, char *argv[])
 	//navigation.computeMST(4646);
 	//ds->Add(navigation.getMSTDrawingPath());
 	ds->Add(navigation.getDrawablePoints());
-	//ds->Add(navigation.getDrawingPath(98, 2934)); //
+	//ds->Add(navigation.getDrawingPath(98, 2934, "blabla")); //
 	//ds->Add(navigation.getDrawableLines());
+	//ds->Add(navigation.getSmoothPath(98, 2934));
 	//std::cout << "Status: Computing Prim algorithm ..." << endl;
 	//std::cout << "Status: Computing Prim algorithm ..." << endl;
 	//navigation.getGraph()->primtMST(4646);
